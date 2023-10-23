@@ -1,2 +1,10 @@
+
+
+# Node modules
 frontend/node_modules/
 backend/node_modules/
+
+# Pycache
+agent/view/__pycache__/
+agent/model/__pycache__/
+agent/controller/__pycache__/

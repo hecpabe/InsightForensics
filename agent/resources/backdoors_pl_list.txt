@@ -1,0 +1,25 @@
+Cgitelnet.pl
+cmd.pl
+dc.pl
+exim.pl
+GO.cgi.pl
+hmass (priv8 mass defacor).pl
+icmpsh-m.pl
+inc.pl
+ka0tic.pl
+list.pl
+lurm_safemod_on.cgi.pl
+Perl Web Shell by RST-GHC.pl
+perl-reverse-shell.pl
+pps-v1.0.pl
+pps-v3.0.pl
+pps-v3.5.pl
+pps-v4.0.pl
+rcpexp.pl
+remot shell.pl
+Silic Group_cgi.pl
+telnet.cgi.pl
+telnet.pl
+up.pl
+webacoo.pl
+WebShell.cgi.pl

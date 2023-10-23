@@ -1,0 +1,309 @@
+12309.php
+404 Not Found.php
+404.php
+404super.php
+404webshell.php
+529.php
+A robust backdoor script made by Daniel Berliner.php
+accept_language.php
+Adminer - Compact database management.php
+Ajax_PHP Command Shell.php
+AK-74 Security Team Web Shell Beta Version.php
+AK-74 Security Team.php
+alfa3.php
+alfav3.0.1.php
+andela.php
+angel.php
+Ani-Shell.php
+Antichat Shell v1.3.php
+Antichat Shell. Modified by Go0o$E.php
+Antichat Shell.php
+Antichat Socks5 Server v 1.0.php
+Antichat_Shell_v1.3.php
+Aria cPanel cracker version 1.0 - Edited By KingDefacer.php
+ASPYDrvsInfo.php
+ava Server Faces MiniWebCmdShell 0.2 by HeartLESS.php
+AventGrup-Sincap 1.0.php
+Ayyildiz Tim  -AYT- Shell v 2.1 Biz.php
+azrail 1.0 by C-W-M.php
+aZRaiLPhp v1.0.php
+aZRaiLPhp_v1.0.php
+B374k Beta ShElL V1.php
+b374k-mini-shell-php.php.php
+b374k.php.php
+Back Connect.php
+Backdoor php v0.1 Coded By Charlichaplin.php
+backdoorfr.php
+Backup script on server.php
+backupsql.php
+bdotw44shell.php
+bdshell.php
+bitwise.php
+BLaSTER.php
+bloodsecv4.php
+Bnkqbakq.php
+boffmax_v1.0_web_shell_by_the-c0de_team(1).php
+by.php
+bypass safemodel.php
+bypass-login.php
+c0derz shell [csh] v. 0.1.1 release.php
+c999shell.php
+c99_locus7s.php
+c99_madnet.php
+c99_webshell.php
+C99madShell v. 2.0 madnet edition.php
+c99ud.php
+Carbylamine PHP Encoder.php
+CasuS 1.5.php
+change.php
+Changing CHMOD Permissions Exploit.php
+client.php
+client1.php
+client2.php
+cls_Base.php
+cmd-simple.php
+cmd.php
+code.php
+Command Shell.php
+config.inc.php
+configkillerionkros.php
+Confusion to encrypt php webshell.php
+Coppermine Photo Gallery = 1.4.3 remote cmmnds xctn.php
+cpanel.php
+CrystalShell v.1.php
+cw.php
+Cyber Shell.php
+cybershell.php
+DAws.php
+db_mysql.class.php
+db_mysql_error.inc.php
+dC3 Security Crew Shell PRiV.php
+dC3_Security_Crew_Shell_PRiV.php
+DDoS attack.php
+Deface Keeper 0.2.php
+dev_core.php
+devilzShell.php
+Dive Shell 1.0 - Emperor Hacking Team.php
+Dive_Shell_1.0_Emperor_Hacking_Team.php
+dns.php
+DTool Pro.php
+Dx.php
+Edited By KingDefacer.php
+EgY_SpIdEr ShElL V2.php
+erne.php
+ex0shell.php
+exp.php
+FaTaL Shell v1.0 - Edited By KingDefacer.php
+fatal.php
+file.php
+from_the_wild1.php
+ftpsearch.php
+g00nshell-v1.3.php
+Gamma Web Shell.php
+get.php
+GFS web-shell ver 3.1.7 - PRiV8.php
+gfs_sh.php
+GFS_web-shell_ver_3.1.7_-_PRiV8.php
+GRP WebShell 2.0 release build 2018 (C)2006,Great.php
+h4ntu shell [powered by tsoi].php
+h4ntu_shell_[powered_by_tsoi].php
+hiddens shell v1.php
+host.php
+I-47 v1.3.php
+iMHaPFtp.php
+includer.php
+ipcheck.php
+ironshell.php
+jpg_payload.php
+KA_uShell 0.1.6.php
+KAdot Universal Shell v0.1.6.php
+KAdot_Universal_Shell_v0.1.6.php
+killnc.php
+Knull Shell.php
+kolang-bypass.php
+kral.php
+lama's'hell v. 3.0.php
+lamashell.php
+laudanum.php
+list.php
+listfile.php
+Liz0ziM Private Safe Mode Command Execuriton Bypass Exploit.php
+load_shell.php
+Loader'z WEB Shell v 0.1.0.2.php
+Loaderz WEB Shell.php
+lolipop.php
+Lolipop.php - Edited By KingDefacer.php
+lostDC shell.php
+lostDC.php
+LOTFREE PHP Backdoor v1.5.php
+Macker's Private PHPShell.php
+make2.php
+Matamu Mat.php
+matamu.php
+megabor.php
+Micro_Webshell.php
+mini.php
+mmm.php
+mof提权带回显带清楚命令版本.php
+moon_1php.php
+Moroccan Spamers Ma-EditioN By GhOsT.php
+Moroccan_Spamers_Ma-EditioN_By_GhOsT.php
+myshell.php
+Mysql interface v1.0.php
+Mysql udf by M4ster.php
+MySQL Web Interface Version 0.8.php
+MySQL Web Shell.php
+Mysql_interface_v1.0.php
+mysql_tool.php
+mysql脱库.php
+navicat_tunnel.php
+NCC Shell v1.0.0.php
+NCC-Shell.php
+NetworkFileManagerPHP.php
+NGH.php
+Non-alphanumeric.php
+nShell v1.0.php
+nshell.php
+nsT View.php
+NTDaddy v1.9.php
+ntunnel_mysql.php
+obfuscated-phpshell.php
+obfuscated-punknopass.php
+pas.php
+Password Hasher for PHP Shell 2.1.php
+PH Vayv.php
+PH_Vayv.php
+PHANTASMA.php
+Php Backdoor v 1.0 by ^Jerem.php
+php MySQL Database Backup Script.php
+PHP Shell.php
+PHP Web Shell by oTTo.php
+PHP 搜索可读可写目录脚本.php
+php-backdoor.php
+php-findsock-shell.php
+php-include-w-shell.php
+php-reverse-shell.php
+phpinfo.php
+pHpINJ.php
+PHPJackal v1.9.php
+PHPRemoteView.php
+PhpShell 2.0.php
+phpshell17.php
+PhpSpy Ver 2006.php
+phpwebbackup.php
+pHp一句话扫描脚本程序.php
+PHP小马 - ExpDoor.com.php
+PHP整站打包程序-By DoDo.php
+PHP检测文件夹权限.php
+php版iisspy.php
+php读取iis.php
+PHVayv.php
+plugin-shell.php
+PostgreSQL数据库操纵.php
+Predator.php
+Private x0rg Web Hosting Bypass.php
+proxy.php
+punk-nopass.php
+punkholic.php
+pws.php
+qsd-php-backdoor.php
+r57.biz Dq99Shell.php
+r57.php
+r57_iFX.php
+r57_kartal.php
+r57_Mohajer22.php
+r57shell v.1.42 - Edited By KingDefacer.php
+r57shell.php
+r57shell127.php
+reverseshell-poc.php
+robot.php
+rootshell.php
+Rootshell.v.1.0.php
+ru24_post_sh.php
+s72 Shell v1.0 Codinf by Cr@zy_King.php
+s72 Shell v1.1 Coding.php
+s72_Shell_v1.1_Coding.php
+Safe mode breaker.php
+Safe0ver Shell -Safe Mod Bypass By Evilc0der.php
+safe0ver.php
+Safe_Mode Bypass PHP 4.4.2 and PHP 5.1.2.php
+Safe_Mode_Bypass_PHP_4.4.2_and_PHP_5.1.2.php
+scanner.php
+Security House - Shell Center - Edited By KingDefacer.php
+Serv-U本地权限提升工具.php
+server.php
+server1.php
+server2.php
+settings.php
+Shell [ci] .Biz was here.php
+Shell Commander.php
+shell.php
+Silic Group Hacker Army - BlackBap.Org.php
+Silic Group php Webshell v3.php
+SimAttacker - Version  1.0.0 - Edited By KingDefacer.php
+SimAttacker - Vrsion 1.0.0 - priv8 4 My friend.php
+simattacker.php
+simple-backdoor.php
+simple_cmd.php
+Simple_PHP_backdoor_by_DK.php
+SimShell 1.0 - Simorgh Security MGZ.php
+SimShell_1.0_-_Simorgh_Security_MGZ.php
+Sincap 1.0.php
+Small Shell - Edited By KingDefacer.php
+Small Web Shell by ZaCo.php
+small.php
+smevk.php
+sniffer.php
+SnIpEr_SA Shell.php
+soldierofallah.php
+Sosyete Safe Mode Bypass Shell - Edited By KingDefacer.php
+sosyete.php
+Spider PHP Shell (SPS-3.0).php
+SPS-3.0免杀.php
+spygrup.php
+SST Sheller.php
+STNC WebShell v0.8.php
+stres.php
+sure.php
+sys32.php
+t57shell.php
+tiny.php
+toby57解析加密一句话木马.php
+tryag.php
+tunnel.php
+udf.dll 专用网马.php
+up.php
+Uploader.php
+Uploading.php
+W3D Shell.php
+Web-shell (c)ShAnKaR.php
+Webcommander by Cr4sh_aka_RKL v0.3.9 NGH edition.php
+WebShell.php
+Win MOF Shell.php
+WinX Shell.php
+wordpress backdoor.php
+WordPress Shell.php
+Worse Linux Shell.php
+Worse Linux Shell.php.php
+wp-conf.php
+wp-conten1_pass_KoR345Ker78DSa.php
+WSO2.7 404 Error Web Shell.php
+wso2.8.5.php
+www.zjjv.com.php
+xml.php
+xnonymoux_webshell_ver_1.0.php
+xslt.php
+xx.php
+zaco.php
+zacosmall.php
+zip.func.php
+ZoRBaCK Connect.php
+ZyklonShell.php
+上传马.php
+中国木马资源网- WwW.7jyewu.Cn.php
+中国木马资源网-WwW.MumaSec.TK.php
+仗剑孤行搜索可读可写目录脚本.php
+在线exp专用免杀版.php
+极其隐蔽的pHp小马穿插在正常页面中.php
+脱库工具.php
+菊花聊天室.php
