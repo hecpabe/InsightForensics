@@ -51,7 +51,8 @@ def executeCommand(subprocessCommand):
     proc = subprocess.Popen(subprocessCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Obtenemos el output
-    output = str(proc.stdout.read(), "UTF-8")
+    outs, errs = proc.communicate()
+    output = str(outs, "UTF-8")
 
     # Preparamos el retorno
     contentToReturn = {
