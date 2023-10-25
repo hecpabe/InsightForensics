@@ -1,0 +1,5 @@
+cmd.sh
+list.sh
+makewar.sh
+run.sh
+up.sh
