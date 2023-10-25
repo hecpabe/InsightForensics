@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Modelo del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 20/10/2023
+    Última Modificación: 25/10/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -14,7 +14,7 @@ from colorama import Fore
 
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
-    controllerFindFilesByExtensions, readFileContent
+    controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -51,6 +51,15 @@ BACKDOORS_LISTS = {
 }
 
 # ========== CODIFICACIÓN DE FUNCIONES ==========
+"""
+    Nombre: Model | Search recently modified files
+    Descripción: Función con la que obtenemos los ficheros modificados recientemente
+    Parámetros: Ninguno.
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna.
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
+"""
 def modelSearchRecentlyModifiedFiles():
 
     # Variables necesarias
@@ -99,6 +108,15 @@ def modelSearchRecentlyModifiedFiles():
     # Retornamos la información
     return finalInformation
 
+"""
+    Nombre: Model | Search suspect files
+    Descripción: Función con la que buscamos ficheros sospechosos en el sistema
+    Parámetros: Ninguno.
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
+"""
 def modelSearchSuspectFiles():
 
     # Variables necesarias
@@ -188,20 +206,59 @@ def modelSearchSuspectFiles():
     # Retornamos la información
     return finalInformation
 
-def modelAnalyzeSuspiciousFiles(files, indexes):
+"""
+    Nombre: Model | Analyze suspicious files
+    Descripción: Función con la que analizamos ficheros para comprobar si son maliciosos o no
+    Parámetros:
+        0: [LIST] Lista con las rutas a los ficheros obtenidos
+        1: [LIST] Lista con los índices de las rutas de ficheros a analizar
+        2: [STRING] ApiKey de VirusTotal
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: La clave a la API debe ser correcta y funcionar correctamente
+    Complejidad Temporal: O(n) n -> Ficheros a analizar
+    Complejidad Espacial: O(n) n -> Ficheros a analizar
+"""
+def modelAnalyzeSuspiciousFiles(files, indexes, apiKey):
 
     # Variables necesarias
     filesToAnalyze = []
-    filesResults = []
+    filesMD5s = {}
+    filesResults = {}
     finalInformation = []
 
     # Obtenemos todas las rutas de los ficheros a analizar en función de la lista de ficheros y los índices seleccionados
     for index in indexes:
-        filesToAnalyze.append(files[index])
+        filesToAnalyze.append(files[index]["info"])
     
-    # Mandamos las rutas de los ficheros a analizar al controlador y obtenemos los resultados de los ficheros
-    
-    # Preparamos el resultado para devolverlo a la vista
+    # Mandamos las rutas de los ficheros a analizar al controlador
+    filesMD5s = controllerScanFiles(filesToAnalyze, apiKey)
+
+    # Si no tenemos errores mandamos a comprobar los hashes MD5 y preparamos el output
+    if not filesMD5s["error"]:
+        filesResults = controllerCheckFiles(filesMD5s["value"], apiKey)
+        if not filesResults["error"]:
+            for file in filesToAnalyze:
+                numberOfPositives = len(filesResults['value'][file])
+                if numberOfPositives == 0:
+                    color = 1
+                elif numberOfPositives < 3:
+                    color = 2
+                else:
+                    color = 3
+                finalInformation.append({
+                    "info": f"[RESULTADO DEL ESCANEO] ({file}) - {numberOfPositives} antivirus han dado positivo.",
+                    "infoTypeID": color
+                })
+        else:
+            finalInformation.append({
+                "info": filesResults["value"],
+                "infoTypeID": 4
+            })
+    else:
+        finalInformation.append({
+            "info": filesMD5s["value"],
+            "infoTypeID": 4
+        })
 
     # Retornamos los resultados procesados
     return finalInformation

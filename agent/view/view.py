@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Vista del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 23/10/2023
+    Última Modificación: 25/10/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -15,12 +15,35 @@ import os
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
-def startInteractiveMode():
+"""
+    Nombre: Start interactive mode
+    Descripción: Función con la que inicializamos la aplicación en modo interactivo (por CLI en vez de por API)
+    Parámetros:
+        0: [STRING] API Key de VirusTotal
+    Retorno: Ninguno
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def startInteractiveMode(virusTotalAPIKey):
     
+    # Almacenamos la clave de la API de VirusTotal
+    global GLOB_virusTotalAPIKey
+    GLOB_virusTotalAPIKey = virusTotalAPIKey
+
     # Ejecutamos el menú principal
     mainMenu()
 
 # ========== CODIFICACIÓN DE FUNCIONES ==========
+"""
+    Nombre: Main menu
+    Descripción: Función con la que gestionamos la ejecución del menu principal de la aplicación
+    Parámetros: Ninguno
+    Retorno: Ninguno
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de ejecuciones
+    Complejidad Espacial: O(1)
+"""
 def mainMenu():
 
     # Variables necesarias
@@ -135,6 +158,15 @@ def printScanInfo():
         infoType = scanInfoType["type"]
         print(f"{color}[-] {colorString}: {infoType}{Fore.RESET}")
 
+"""
+    Nombre: Full scan
+    Descripción: Función con la que realizamos el escaneo completo del sistema
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
 def fullScan():
 
     # Mostramos la leyenda del escaneo
@@ -144,6 +176,16 @@ def fullScan():
     fileSystemAnalysis(False)
     return True
 
+"""
+    Nombre: Filesystem analysis
+    Descripción: Función con la que escaneamos el sistema de ficheros
+    Parámetros:
+        0: [BOOL] Parámetro que indica si se debe de mostrar la leyenda de información o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
+"""
 def fileSystemAnalysis(showInfo=True):
 
     # Variables necesarias
@@ -173,6 +215,14 @@ def fileSystemAnalysis(showInfo=True):
 
     return True
 
+"""
+    Nombre: Suspect file analysis
+    Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
+"""
 def suspectFileAnalysis():
     
     # Variables necesarias
@@ -214,20 +264,33 @@ def suspectFileAnalysis():
         print(f"{color}{index}.- [{fileInfoType}] {fileInfo}{Fore.RESET}")
 
     # Obtenemos la selección de ficheros a analizar
-    choose = input("Seleccione los ficheros a analizar (1 | 1,2,3,... | 1-5 | 1-5,7-10 | 1-5,7):")
+    choose = input("Seleccione los ficheros a analizar (1 | 1,2,3,... | 1-5 | 1-5,7-10 | 1-5,7): ")
 
     # Evaluamos la selección de ficheros a analizar
     # Transformamos el formato a una única lista de enteros con los índices de los ficheros a analizar
     filesToAnalyze = evalFilesToAnalyze(choose)
 
     # Analizamos los ficheros seleccionados y obtenemos el resultado para mostrarlo
-    analyzedFilesResults = modelAnalyzeSuspiciousFiles(sortedFiles, filesToAnalyze)
+    analyzedFilesResults = modelAnalyzeSuspiciousFiles(sortedFiles, filesToAnalyze, GLOB_virusTotalAPIKey)
 
     # Mostramos la información obtenida
+    clearConsole()
+    printScanInfo()
+    printSpacer("Resultados del escaneo")
     printObtainedInfo(analyzedFilesResults)
 
     return True
 
+"""
+    Nombre: Print obtained info
+    Descripción: Función con la que mostramos de forma correcta el output de las funciones
+    Parámetros:
+        0: [LIST] Lista con la información obtenida de las funciones
+    Retorno: Ninguno
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de líneas a printear
+    Complejidad Espacial: O(1)
+"""
 def printObtainedInfo(infoList):
 
     # Mostramos la información con su correspondiente color
@@ -237,6 +300,15 @@ def printObtainedInfo(infoList):
         color = SCAN_INFO_TYPES[infoTypeID]["color"]
         print(f"{color}{infoString}{Fore.RESET}")
 
+"""
+    Nombre: Eval files to analyze
+    Descripción: Función con la que parseamos el string con los índices de ficheros a escaneas en una lista numérica con estos
+    Parámetros: [STRING] String con los índices a parsear
+    Retorno: [LIST] Lista numérica con los índices a parsear
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
 def evalFilesToAnalyze(files):
 
     # Variables necesarias
@@ -314,7 +386,14 @@ SCAN_INFO_TYPES = [
         "type": "Peligro",
         "color": Fore.RED,
         "colorString": "Rojo"
+    },
+    {
+        "id": 3,
+        "type": "ERROR",
+        "color": Fore.RED,
+        "colorString": "Rojo"
     }
 ]
 
+GLOB_virusTotalAPIKey = ""
 GLOB_suspectFiles = []
