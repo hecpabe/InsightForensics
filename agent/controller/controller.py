@@ -5,11 +5,11 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Controlador de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 20/10/2023
+    Última Modificación: 29/10/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
-import subprocess, requests, time
+import subprocess, requests, time, os
 
 # ========== DECLARACIONES GLOBALES ==========
 
@@ -210,6 +210,23 @@ def controllerGetPositives(scan_json={}):
     return {
         "error": False,
         "value": antivirus_positivos
+    }
+
+"""
+    Nombre: Controller | Get system PATH
+    Descripción: Función con la que obtenemos el PATH del sistema operativo
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de rutas en el PATH del sistema operativo
+"""
+def controllerGetSystemPath():
+
+    # Ejecutamos la obtención del PATH
+    return {
+        "error": False,
+        "value": os.environ["PATH"].split(":")
     }
 
 """

@@ -5,16 +5,17 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Modelo del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 25/10/2023
+    Última Modificación: 29/10/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
 import re
 from colorama import Fore
+from functools import reduce
 
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
-    controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles
+    controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -261,4 +262,37 @@ def modelAnalyzeSuspiciousFiles(files, indexes, apiKey):
         })
 
     # Retornamos los resultados procesados
+    return finalInformation
+
+"""
+    Nombre: Model | System PATH Analysis
+    Descripción: Función con la que analizamos el PATH del sistema operativo en busca de ficheros .sh
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros .sh en el PATH
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros .sh en el PATH
+"""
+def modelSystemPathAnalysis():
+
+    # Variables necesarias
+    finalInformation = []
+    systemPath = []
+
+    # Obtenemos el PATH del sistema
+    systemPath = controllerGetSystemPath()["value"]
+
+    # Obtenemos los ficheros .sh en las rutas del PATH y los preparamos para retornar
+    for path in systemPath:
+        shFiles = controllerFindFilesByExtensions(path, [".sh"])["value"]
+        if shFiles:
+            for shFile in shFiles.split("\n"):
+                if shFile:
+                    finalInformation.append(
+                        {
+                            "info": shFile,
+                            "infoTypeID": 0
+                        }
+                    )
+
     return finalInformation
