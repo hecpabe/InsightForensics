@@ -1,0 +1,66 @@
+023.jsp
+BackerHack JSP Manage-System 1.0.jsp
+base64.jspx
+browser.jsp
+by Bagheera.jsp
+caidao.jsp
+cat.jsp
+cat.jspx
+cmd.jsp
+cmd.jspx
+cmd_win32.jsp
+cmdjsp.jsp
+Command Execution (win32).jsp
+css.jsp
+css1.jsp
+devilzShell.jsp
+JFoler 1.0.jsp
+jshell ver 0.1.jsp
+jshell ver 1.0.jsp
+JSP Backdoor Reverse Shell.jsp
+JSP Shell 岁月联盟专用版本.jsp
+jsp-reverse.jsp
+JspDo Code By Xiao.3.jsp
+JspHelper Codz By - Leo.jsp
+jspshell.jsp
+JspSpy Codz By - Ninty.jsp
+JspSpy Codz By - Ninty_1.jsp
+JspSpy Private Codz By - Ninty.jsp
+JspSpy Private Codz By - Ninty_encode.jsp
+Jspspy web~shell V1.0 ※MADE by 孤水绕城 QQ540410588.jsp
+JspSpy.jsp
+jspspy.jspx
+jspspy_k8.jsp
+JspTqz.jsp
+jspx.jspx
+jspy.jsp
+list.jsp
+logger小马.jsp
+login.jsp
+Mysql Database.jsp
+one.jsp
+one1.jsp
+Oracle Database.jsp
+oracle.jsp
+paxmac.jspx
+pwnshell - an interactive jsp shell.jsp
+reverse.jsp
+shell.jsp
+Silic Group.jsp
+simple-shell.jsp
+simple.jsp
+SJavaWebManageV1.4.jsp
+spjspshell.jsp
+tunnel.jsp
+tunnel.tomcat.5.jsp
+up.jsp
+up_win32.jsp
+XXOO.jsp
+上传小马.jsp
+内网扫描header.jsp
+内网探测.jsp
+小马.jsp
+新型JSP小马支持上传任意格式文件.jsp
+灭天远程管理.jsp
+老V.jsp
+苦咖啡专用.jsp
