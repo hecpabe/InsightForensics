@@ -13,7 +13,7 @@ from colorama import Fore
 import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
-    modelSystemPathAnalysis
+    modelSystemPathAnalysis, modelEditableRootFilesSearch
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -176,6 +176,7 @@ def fullScan():
     # Escaneamos el sistema
     fileSystemAnalysis(False)
     systemPathAnalysis(False)
+    editableRootFilesSearch(False)
 
     return True
 
@@ -245,6 +246,34 @@ def systemPathAnalysis(showInfo=True):
     # Agregamos los ficheros encontrados
     global GLOB_shFilesInPath
     GLOB_shFilesInPath = shFilesInPath
+
+    return True
+
+"""
+    Nombre: Editable root files search
+    Descripción: Función con la que obtenemos todos los ficheros de root editables por cualquiera
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros encontrados
+"""
+def editableRootFilesSearch(showInfo=True):
+    
+    # Variables necesarias
+    editableRootFiles = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos el escaneo de ficheros de root editables por cualquiera
+    printSpacer("Ficheros de root editables por cualquiera")
+    editableRootFiles = modelEditableRootFilesSearch()
+    printObtainedInfo(editableRootFiles)
+
+    return True
 
 """
     Nombre: Suspect file analysis
@@ -388,11 +417,15 @@ MAIN_MENU_OPTIONS = [
         "function": systemPathAnalysis
     },
     {
-        "name": "4.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "4.- [SCAN] Búsqueda de ficheros de root editables por cualquiera",
+        "function": editableRootFilesSearch
+    },
+    {
+        "name": "5.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "5.- Salir",
+        "name": "6.- Salir",
         "function": mainMenuExit
     }
 ]

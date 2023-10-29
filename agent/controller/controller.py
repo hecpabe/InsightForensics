@@ -77,6 +77,38 @@ def controllerFindFilesByExtensions(path, extensions):
     return executeCommand(command)
 
 """
+    Nombre: Controller | Get system PATH
+    Descripción: Función con la que obtenemos el PATH del sistema operativo
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de rutas en el PATH del sistema operativo
+"""
+def controllerGetSystemPath():
+
+    # Ejecutamos la obtención del PATH
+    return {
+        "error": False,
+        "value": os.environ["PATH"].split(":")
+    }
+
+"""
+    Nombre: Controller | Editable root files search
+    Descripción: Función con la que obtenemos todos los ficheros de root editables por cualquiera
+    Parámetros:
+        0: [STRING] Ruta en la que buscar los ficheros
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros encontrados
+"""
+def controllerEditableRootFilesSearch(path):
+
+    # Realizamos la búsqueda de ficheros de root editables por cualquiera
+    return executeCommand(["find", path, "-type", "f", "-uid", "0", "-perm", "/o=w"])
+
+"""
     Nombre: Controller | Scan files
     Descripción: Función con la que mandamos una lista de ficheros a escanear en VirusTotal
     Parámetros:
@@ -210,23 +242,6 @@ def controllerGetPositives(scan_json={}):
     return {
         "error": False,
         "value": antivirus_positivos
-    }
-
-"""
-    Nombre: Controller | Get system PATH
-    Descripción: Función con la que obtenemos el PATH del sistema operativo
-    Parámetros: Ninguno
-    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
-    Precondición: Ninguna
-    Complejidad Temporal: O(1)
-    Complejidad Espacial: O(n) n -> Cantidad de rutas en el PATH del sistema operativo
-"""
-def controllerGetSystemPath():
-
-    # Ejecutamos la obtención del PATH
-    return {
-        "error": False,
-        "value": os.environ["PATH"].split(":")
     }
 
 """
