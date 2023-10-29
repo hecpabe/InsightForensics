@@ -13,7 +13,7 @@ from colorama import Fore
 import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
-    modelSystemPathAnalysis, modelEditableRootFilesSearch
+    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -177,6 +177,7 @@ def fullScan():
     fileSystemAnalysis(False)
     systemPathAnalysis(False)
     editableRootFilesSearch(False)
+    etcHostsCheck(False)
 
     return True
 
@@ -273,6 +274,32 @@ def editableRootFilesSearch(showInfo=True):
     editableRootFiles = modelEditableRootFilesSearch()
     printObtainedInfo(editableRootFiles)
 
+    return True
+
+"""
+    Nombre: Etc hosts check
+    Descripción: Función con la que obtenemos y mostramos los hosts de un sistema
+    Parámetros:
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de hosts
+"""
+def etcHostsCheck(showInfo=True):
+
+    # Variables necesarias
+    hosts = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+
+    # Realizamos el escaneo del fichero /etc/hosts
+    printSpacer("Hosts del sistema")
+    hosts = modelEtcHostsCheck()
+    printObtainedInfo(hosts)
+    
     return True
 
 """
@@ -421,11 +448,15 @@ MAIN_MENU_OPTIONS = [
         "function": editableRootFilesSearch
     },
     {
-        "name": "5.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "5.- [SCAN] Hosts del equipo",
+        "function": etcHostsCheck
+    },
+    {
+        "name": "6.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "6.- Salir",
+        "name": "7.- Salir",
         "function": mainMenuExit
     }
 ]

@@ -289,7 +289,7 @@ def modelSystemPathAnalysis():
                     finalInformation.append(
                         {
                             "info": shFile,
-                            "infoTypeID": 0
+                            "infoTypeID": 2
                         }
                     )
 
@@ -323,6 +323,69 @@ def modelEditableRootFilesSearch():
             "info": rootFile,
             "infoTypeID": 3
         })
+    
+    return finalInformation
+
+"""
+    Nombre: Model | Etc hosts check
+    Descripción: Función con la que obtenemos los hosts de un sistema
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de hosts
+    Complejidad Espacial: O(n) n -> Cantidad de hosts
+"""
+def modelEtcHostsCheck():
+
+    # Variables necesarias
+    etcHostsContent = ""
+    etcHostsContentNormalized = []
+    etcHostsContentFiltered = []
+    finalInformation = []
+
+    # Obtenemos el contenido del fichero /etc/hosts
+    etcHostsContent = readFileContent("/etc/hosts")
+
+    # Normalizamos el contenido a IP HOST
+    etcHostsContentNormalized = list(
+        map(
+            lambda x: re.sub(' +', ' ', x),
+            map(
+                lambda x: x.replace("\t", " "),
+                etcHostsContent.split("\n")
+            )
+        )
+    )
+    
+    # Filtramos el contenido normalizado para evitar líneas vacías y comentarios
+    etcHostsContentFiltered = list(
+        filter(
+            lambda x: x and x[0] != "#" and x[1] != "#",
+            etcHostsContentNormalized
+        )
+    )
+
+    # Preparamos la información para retornarla
+    for host in etcHostsContentFiltered:
+
+        # Separamos la línea del /etc/hosts por espacios
+        hostElements = host.split(" ")
+
+        # Si el primer elemento está vacío lo eliminamos, ya que empieza la línea por espacio
+        if not hostElements[0]:
+            hostElements.pop(0)
+        
+        # Formateamos de la siguiente manera: IP - HOST, HOST, HOST...
+        ipAddress = hostElements.pop(0)
+        hostsString = ", ".join(hostElements)
+
+        # Preparamos la información para retornarla
+        finalInformation.append(
+            {
+                "info": f"{ipAddress} - {hostsString}",
+                "infoTypeID": 0
+            }
+        )
     
     return finalInformation
 
