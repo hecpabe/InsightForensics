@@ -5,14 +5,15 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Vista del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 25/10/2023
+    Última Modificación: 29/10/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
 from colorama import Fore
 import os
 
-from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles
+from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
+    modelSystemPathAnalysis
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -174,6 +175,8 @@ def fullScan():
 
     # Escaneamos el sistema
     fileSystemAnalysis(False)
+    systemPathAnalysis(False)
+
     return True
 
 """
@@ -216,6 +219,34 @@ def fileSystemAnalysis(showInfo=True):
     return True
 
 """
+    Nombre: System PATH Analysis
+    Descripción: Función con la que analizamos el PATH del sistema operativo en busca de ficheros .sh
+    Parámetros:
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros .sh en el PATH
+"""
+def systemPathAnalysis(showInfo=True):
+    
+    # Variables necesarias
+    shFilesInPath = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos el escaneo de ficheros .sh en el PATH
+    printSpacer("Ficheros .sh en el PATH")
+    shFilesInPath = modelSystemPathAnalysis()
+    printObtainedInfo(shFilesInPath)
+
+    # Agregamos los ficheros encontrados
+    global GLOB_shFilesInPath
+    GLOB_shFilesInPath = shFilesInPath
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -239,7 +270,7 @@ def suspectFileAnalysis():
     analyzedFilesResults = []
 
     # Separamos todos los ficheros detectados en las diferentes categorias
-    for file in GLOB_suspectFiles:
+    for file in GLOB_suspectFiles + GLOB_shFilesInPath:
         infoTypeID = file["infoTypeID"]
         if infoTypeID == 0:
             infoFiles.append(file)
@@ -353,11 +384,15 @@ MAIN_MENU_OPTIONS = [
         "function": fileSystemAnalysis
     },
     {
-        "name": "3.- [ANALÍSIS] Análisis de ficheros sospechosos",
+        "name": "3.- [SCAN] Búsqueda de ficheros .sh en el path",
+        "function": systemPathAnalysis
+    },
+    {
+        "name": "4.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "4.- Salir",
+        "name": "5.- Salir",
         "function": mainMenuExit
     }
 ]
@@ -397,3 +432,4 @@ SCAN_INFO_TYPES = [
 
 GLOB_virusTotalAPIKey = ""
 GLOB_suspectFiles = []
+GLOB_shFilesInPath = []
