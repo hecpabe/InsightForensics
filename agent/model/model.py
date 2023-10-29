@@ -15,7 +15,8 @@ from functools import reduce
 
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
-    controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath
+    controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
+    controllerEditableRootFilesSearch
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -74,10 +75,7 @@ def modelSearchRecentlyModifiedFiles():
     filteredResult = list(
         map(
             lambda x: re.sub(' +', ' ', x), 
-            filter(
-                lambda x: not any(directory in x for directory in SYSTEM_DIRECTORY_FILTER), 
-                result["value"].split("\n")
-            )
+            filterFilesFound(result, SYSTEM_DIRECTORY_FILTER)
         )
     )
 
@@ -296,3 +294,60 @@ def modelSystemPathAnalysis():
                     )
 
     return finalInformation
+
+"""
+    Nombre: Model | Editable root files search
+    Descripción: Función con la que obtenemos todos los ficheros de root editables por cualquiera
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros encontrados
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros encontrados
+"""
+def modelEditableRootFilesSearch():
+
+    # Variables necesarias
+    editableRootFiles = []
+    finalInformation = []
+
+    # Obtenemos los ficheros de root editables por cualquiera
+    editableRootFiles = controllerEditableRootFilesSearch("/")
+
+    # Agregamos los ficheros a la respuesta
+    for rootFile in filterFilesFound(editableRootFiles, SYSTEM_DIRECTORY_FILTER):
+
+        if not rootFile:
+            continue
+        
+        finalInformation.append({
+            "info": rootFile,
+            "infoTypeID": 3
+        })
+    
+    return finalInformation
+
+"""
+    Nombre: Filter files found
+    Descripción: Función con la que filtramos los ficheros encontrados para evitar rutas que usa el sistema operativo
+    Parámetros: 
+        0: [LIST] Lista (obtenida mediante el controlador) de ficheros a filtrar
+        1: [LIST] Lista de strings de filtro para no dejar pasar
+    Retorno: [LIST] Lista con los ficheros ya filtrados
+    Precondición: Las listas tienen que tener el formato correcto (diccionario obtenido del controlador para los ficheros y string para los filtros)
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros a filtrar
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a filtrar
+"""
+def filterFilesFound(filesFound, filesFilter):
+
+    # Variables necesarias
+    filteredResult = []
+
+    # Filtramos los ficheros encontrados para evitar los que pertenezcan a los del filtro
+    filteredResult = list(
+        filter(
+            lambda x: not any(directory in x for directory in filesFilter), 
+            filesFound["value"].split("\n")
+        )
+    )
+
+    return filteredResult
