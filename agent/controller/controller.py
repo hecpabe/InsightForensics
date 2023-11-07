@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Controlador de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 29/10/2023
+    Última Modificación: 07/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -107,6 +107,21 @@ def controllerEditableRootFilesSearch(path):
 
     # Realizamos la búsqueda de ficheros de root editables por cualquiera
     return executeCommand(["find", path, "-type", "f", "-uid", "0", "-perm", "/o=w"])
+
+"""
+    Nombre: Controller | Get capabilities
+    Descripción: Función con la que obtenemos las capabilities del sistema
+    Parámetros:
+        0: [STRING] Ruta en la que buscar los ficheros con capabilities
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros encontrados
+"""
+def controllerGetCapabilities(path):
+
+    # Realizamos la búsqueda de capabilities en la ruta del sistema indicada
+    return executeCommand(["getcap", "-r", path])
 
 """
     Nombre: Controller | Scan files

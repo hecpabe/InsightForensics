@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Vista del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 29/10/2023
+    Última Modificación: 07/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -13,7 +13,7 @@ from colorama import Fore
 import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
-    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck
+    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -178,6 +178,7 @@ def fullScan():
     systemPathAnalysis(False)
     editableRootFilesSearch(False)
     etcHostsCheck(False)
+    capabilitiesCheck(False)
 
     return True
 
@@ -306,6 +307,32 @@ def etcHostsCheck(showInfo=True):
     hosts = modelEtcHostsCheck()
     printObtainedInfo(hosts)
     
+    return True
+
+"""
+    Nombre: Capabilities check
+    Descripción: Función con la que obtenemos las capabilities en función de si son peligrosas o no y las mostramos por pantalla
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de programas con capabilities
+"""
+def capabilitiesCheck(showInfo=True):
+    
+    # Variables necesarias
+    capabilities = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos la comprobación de las capabilities
+    printSpacer("Capabilities")
+    capabilities = modelCapabilitiesCheck()
+    printObtainedInfo(capabilities)
+
     return True
 
 """
@@ -458,11 +485,15 @@ MAIN_MENU_OPTIONS = [
         "function": etcHostsCheck
     },
     {
-        "name": "6.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "6.- [SCAN] Capabilities del equipo",
+        "function": capabilitiesCheck
+    },
+    {
+        "name": "7.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "7.- Salir",
+        "name": "8.- Salir",
         "function": mainMenuExit
     }
 ]
@@ -496,7 +527,7 @@ SCAN_INFO_TYPES = [
         "id": 3,
         "type": "ERROR",
         "color": Fore.MAGENTA,
-        "colorString": "Rojo"
+        "colorString": "Morado"
     }
 ]
 

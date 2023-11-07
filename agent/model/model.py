@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Modelo del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 29/10/2023
+    Última Modificación: 07/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -16,7 +16,7 @@ from functools import reduce
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
-    controllerEditableRootFilesSearch
+    controllerEditableRootFilesSearch, controllerGetCapabilities
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -51,6 +51,29 @@ BACKDOORS_LISTS = {
     "rb": [],
     "sh": []
 }
+DANGEROUS_CAPABILITIES = [
+    {'capability': 'cap_sys_admin',         'infoTypeID': 3},
+    {'capability': 'cap_sys_ptrace',        'infoTypeID': 3},
+    {'capability': 'cap_sys_module',        'infoTypeID': 3},
+    {'capability': 'cap_dac_reac_search',   'infoTypeID': 3},
+    {'capability': 'cap_dac_override',      'infoTypeID': 3},
+    {'capability': 'cap_chown',             'infoTypeID': 3},
+    {'capability': 'cap_fowner',            'infoTypeID': 3},
+    {'capability': 'cap_setuid',            'infoTypeID': 3},
+    {'capability': 'cap_setgid',            'infoTypeID': 3},
+    {'capability': 'cap_setfcap',           'infoTypeID': 3},
+    {'capability': 'cap_sys_rawio',         'infoTypeID': 3},
+    {'capability': 'cap_kill',              'infoTypeID': 3},
+    {'capability': 'cap_net_bind_service',  'infoTypeID': 3},
+    {'capability': 'cap_net_raw',           'infoTypeID': 3},
+    {'capability': 'cap_linux_immutable',   'infoTypeID': 3},
+    {'capability': 'cap_sys_chroot',        'infoTypeID': 3},
+    {'capability': 'cap_sys_boot',          'infoTypeID': 3},
+    {'capability': 'cap_syslog',            'infoTypeID': 3},
+    {'capability': 'cap_mknod',             'infoTypeID': 3},
+    {'capability': 'cap_setpcap',           'infoTypeID': 3},
+    {'capability': 'cap_net_admin',         'infoTypeID': 2},
+]
 
 # ========== CODIFICACIÓN DE FUNCIONES ==========
 """
@@ -386,6 +409,46 @@ def modelEtcHostsCheck():
                 "infoTypeID": 0
             }
         )
+    
+    return finalInformation
+
+"""
+    Nombre: Model | Capabilities check
+    Descripción: Función con la que obtenemos las capabilities del sistema y comprobamos si alguna es peligrosa
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna.
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros
+"""
+def modelCapabilitiesCheck():
+
+    # Variables necesarias
+    capabilitiesOutput = ""
+    finalInformation = []
+
+    # Obtenemos las capabilities del sistema
+    capabilitiesOutput = controllerGetCapabilities("/")
+
+    # Interpretamos las capabilities
+    for line in capabilitiesOutput["value"].split("\n"):
+        if not line:
+            continue
+        path, caps = line.split(" ")
+        dangerousCapabilityFound = False
+        for dangerousCapability in DANGEROUS_CAPABILITIES:
+            if dangerousCapability["capability"] in caps:
+                dangerousCapabilityFound = True
+                finalInformation.append({
+                    "info": f"PATH: {path} | CAPABILITIES: {caps}",
+                    "infoTypeID": dangerousCapability["infoTypeID"]
+                })
+                break
+        if not dangerousCapabilityFound:
+            finalInformation.append({
+                "info": f"PATH: {path} | CAPABILITIES: {caps}",
+                "infoTypeID": 1
+            })
     
     return finalInformation
 
