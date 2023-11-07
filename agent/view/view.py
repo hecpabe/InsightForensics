@@ -113,9 +113,9 @@ def printSpacer(textInSpacer):
     Complejidad Espacial: O(1)
 """
 def printError(errorString, exception=None, exitNeeded=False):
-    print(Fore.RED + "[X] ERROR: " + errorString + Fore.RESET)
+    print(Fore.MAGENTA + "[X] ERROR: " + errorString + Fore.RESET)
     if exception:
-        print(Fore.RED + "Exception: " + str(exception) + Fore.RESET)
+        print(Fore.MAGENTA + "Exception: " + str(exception) + Fore.RESET)
     if exitNeeded:
         exit(1)
 
@@ -197,13 +197,19 @@ def fileSystemAnalysis(showInfo=True):
     recentlyModifiedFiles = []
     suspectFiles = []
 
+    try:
+        recentlyModifiedFileTime = int(input("Introduzca la cantidad de minutos desde que se ha modificado un archivo para considerarlo reciente: "))
+    except:
+        printError("No se ha podido interpretar el tiempo introducido, estableciendo el por defecto...")
+        recentlyModifiedFileTime = -1
+
     # Mostramos la leyenda del escaneo
     if showInfo:
         printScanInfo()
 
     # Realizamos el escaneo de ficheros modificados recientemente
     printSpacer("Ficheros modificados recientemente")
-    recentlyModifiedFiles = modelSearchRecentlyModifiedFiles()
+    recentlyModifiedFiles = modelSearchRecentlyModifiedFiles(recentlyModifiedFileTime) if recentlyModifiedFileTime > 0 else modelSearchRecentlyModifiedFiles()
     printObtainedInfo(recentlyModifiedFiles)
 
     # Realizamos el escaneo de ficheros sospechosos
@@ -408,7 +414,7 @@ def evalFilesToAnalyze(files):
     # Sino, preparamos el array de enteros a retornar, en caso de que haya - es un rango
     elif "-" in files:
         rangeStart, rangeEnd = map(lambda x: int(x), files.split("-"))
-        singleFiles = list(range(rangeStart, rangeEnd+1))
+        singleFiles = list(range(rangeStart - 1, rangeEnd))
     # Sino, es un número suelto, por lo que lo añadimos convertido a entero
     else:
         singleFiles.append(int(files))
@@ -489,7 +495,7 @@ SCAN_INFO_TYPES = [
     {
         "id": 3,
         "type": "ERROR",
-        "color": Fore.RED,
+        "color": Fore.MAGENTA,
         "colorString": "Rojo"
     }
 ]

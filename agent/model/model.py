@@ -62,14 +62,14 @@ BACKDOORS_LISTS = {
     Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
     Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
 """
-def modelSearchRecentlyModifiedFiles():
+def modelSearchRecentlyModifiedFiles(recentlyModifiedFileTime=RECENT_FILES_TIME):
 
     # Variables necesarias
     filteredResult = []
     finalInformation = []
     
     # Obtenemos los ficheros modificados en los útlimos minutos
-    result = controllerFindRecentModifiedFiles(RECENT_FILES_TIME)
+    result = controllerFindRecentModifiedFiles(recentlyModifiedFileTime)
 
     # Filtramos el input de find para quedarnos con los strings que no contengan directorios modificados por el sistema, separados por un único espacio
     filteredResult = list(
