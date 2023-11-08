@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Controlador de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 07/11/2023
+    Última Modificación: 08/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -122,6 +122,20 @@ def controllerGetCapabilities(path):
 
     # Realizamos la búsqueda de capabilities en la ruta del sistema indicada
     return executeCommand(["getcap", "-r", path])
+
+"""
+    Nombre: Controller | Get user groups
+    Descripción: Función con la que obtenemos los grupos del usuario mediante el comando groups
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de grupos del usuario
+"""
+def controllerGetUserGroups():
+
+    # Obtenemos los grupos del usuario
+    return executeCommand(["groups"])
 
 """
     Nombre: Controller | Scan files

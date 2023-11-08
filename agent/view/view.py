@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Vista del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 07/11/2023
+    Última Modificación: 08/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -13,7 +13,7 @@ from colorama import Fore
 import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
-    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck
+    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -336,6 +336,32 @@ def capabilitiesCheck(showInfo=True):
     return True
 
 """
+    Nombre: Groups check
+    Descripción: Función con la que comprobamos los grupos del sistema y mostramos la información
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de grupos en el fichero /etc/group
+"""
+def groupsCheck(showInfo=True):
+    
+    # Variables necesarias
+    groups = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos la comprobación de los grupos
+    printSpacer("Grupos del sistema")
+    groups = modelGroupsCheck()
+    printObtainedInfo(groups)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -489,11 +515,15 @@ MAIN_MENU_OPTIONS = [
         "function": capabilitiesCheck
     },
     {
-        "name": "7.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "7.- [SCAN] Grupos del sistema",
+        "function": groupsCheck
+    },
+    {
+        "name": "8.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "8.- Salir",
+        "name": "9.- Salir",
         "function": mainMenuExit
     }
 ]

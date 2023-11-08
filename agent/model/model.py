@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Modelo del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 07/11/2023
+    Última Modificación: 08/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -16,7 +16,7 @@ from functools import reduce
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
-    controllerEditableRootFilesSearch, controllerGetCapabilities
+    controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -73,6 +73,25 @@ DANGEROUS_CAPABILITIES = [
     {'capability': 'cap_mknod',             'infoTypeID': 3},
     {'capability': 'cap_setpcap',           'infoTypeID': 3},
     {'capability': 'cap_net_admin',         'infoTypeID': 2},
+]
+EXPLOITABLE_GROUPS = [
+    "root",
+    "sudo",
+    "admin",
+    "wheel",
+    "video",
+    "disk",
+    "shadow",
+    "adm",
+    "docker",
+    "lxc",
+    "lxd"
+]
+DANGEROUS_GROUPS = [
+    "sudo",
+    "disk",
+    "shadow",
+    "docker"
 ]
 
 # ========== CODIFICACIÓN DE FUNCIONES ==========
@@ -450,6 +469,107 @@ def modelCapabilitiesCheck():
                 "infoTypeID": 1
             })
     
+    return finalInformation
+
+"""
+    Nombre: Model | Groups check
+    Descripción: Función con la que comprobamos los grupos del sistema
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de grupos del fichero /etc/group
+    Complejidad Espacial: O(n) n -> Cantidad de grupos del fichero /etc/group
+"""
+def modelGroupsCheck():
+
+    # Variables necesarias
+    userGroupsOutput = ""
+    systemGroupsOutput = ""
+
+    dangerList = []
+    warningList = []
+    safeList = []
+    infoList = []
+
+    finalInformation = []
+
+    # Obtenemos los grupos del usuario
+    userGroupsOutput = controllerGetUserGroups()
+
+    # Obtenemos los grupos del sistema
+    systemGroupsOutput = readFileContent("/etc/group")
+
+    # Agregamos como información los grupos del usuario
+    finalInformation.append({
+        "info": f"GRUPOS DEL USUARIO: {userGroupsOutput['value']}",
+        "infoTypeID": 0
+    })
+    finalInformation.append({"info": "", "infoTypeID": 0})  # Salto de línea
+
+    # Agregamos la información del /etc/group
+    finalInformation.append({
+        "info": "----- /etc/group -----",
+        "infoTypeID": 0
+    })
+
+    for line in systemGroupsOutput.split("\n"):
+        # Si no tiene contenido pasamos
+        if not line:
+            continue
+
+        # Separamos la línea en grupo:contraseña:gid:miembros
+        group, password, gid, members = line.split(":")
+
+        # Si el grupo tiene una contraseña especificada en el /etc/group lo marcamos como peligroso
+        if password != 'x':
+            dangerList.append({
+                "info": f"[PELIGRO - CONTRASEÑA EXPLÍCITA] {line}",
+                "infoTypeID": 3
+            })
+            continue
+
+        # Si el grupo tiene GID 0 (es root) y tiene usuarios lo marcamos como peligroso o advertencia si es el grupo de root
+        if gid == 0 and members:
+            if group == "root":
+                warningList.append({
+                    "info": f"[AVISO - USUARIO EN GRUPO ROOT] {line}",
+                    "infoTypeID": 2
+                })
+            else:
+                dangerList.append({
+                    "info": f"[PELIGRO - USUARIO EN GRUPO CON PRIVILEGIOS DE ROOT] {line}",
+                    "infoTypeID": 3
+                })
+            continue
+        
+        # Si el grupo es un grupo peligroso y tiene usuarios lo marcamos como advertencia si es explotable y peligro si es peligroso
+        if group in EXPLOITABLE_GROUPS and members:
+            if group in DANGEROUS_GROUPS:
+                dangerList.append({
+                    "info": f"[PELIGRO - USUARIO EN GRUPO PELIGROSO] {line}",
+                    "infoTypeID": 3
+                })
+            else:
+                warningList.append({
+                    "info": f"[AVISO - USUARIO EN GRUPO EXPLOTABLE] {line}",
+                    "infoTypeID": 2
+                })
+            continue
+        
+        # EN ESTE CASO NO ES UN PRIVILEGIO PELIGROSO
+        # Si el GID es mayor o igal que 1000 es una cuenta de usuario, sino es de servicio
+        if (int(gid) >= 1000 and group != "nogroup") or int(gid) == 0:
+            safeList.append({
+                "info": f"[SIN PELIGRO - CUENTA DE USUARIO] {line}",
+                "infoTypeID": 1
+            })
+        else:
+            infoList.append({
+                "info": f"[INFO - CUENTA DE SERVICIO] {line}",
+                "infoTypeID": 0
+            })
+
+    finalInformation += dangerList + warningList + safeList + infoList
     return finalInformation
 
 """
