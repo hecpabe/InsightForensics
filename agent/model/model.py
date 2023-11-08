@@ -573,6 +573,36 @@ def modelGroupsCheck():
     return finalInformation
 
 """
+    Nombre: Model | SSH Key Search
+    Descripción: Función con la que obtenemos las claves SSH (.pem y .ppk) en un directorio (de forma recursiva)
+    Parámetros:
+        0: [STRING] Ruta en la que buscar
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de claves encontradas
+    Complejidad Espacial: O(n) n -> Cantidad de claves encontradas
+"""
+def modelSSHKeySearch(path):
+
+    # Variables necesarias
+    sshKeysFound = ""
+    finalInformation = []
+
+    # Buscamos claves SSH (.pem / .ppk)
+    sshKeysFound = controllerFindFilesByExtensions(path, [".pem", ".ppk"])["value"]
+
+    # Procesamos los ficheros encontrados
+    if sshKeysFound:
+        for sshKey in sshKeysFound.split("\n"):
+            if sshKey:
+                finalInformation.append({
+                    "info": sshKey,
+                    "infoTypeID": 2
+                })
+    
+    return finalInformation
+
+"""
     Nombre: Filter files found
     Descripción: Función con la que filtramos los ficheros encontrados para evitar rutas que usa el sistema operativo
     Parámetros: 

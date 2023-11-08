@@ -13,7 +13,8 @@ from colorama import Fore
 import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
-    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck
+    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
+    modelSSHKeySearch
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -179,6 +180,8 @@ def fullScan():
     editableRootFilesSearch(False)
     etcHostsCheck(False)
     capabilitiesCheck(False)
+    groupsCheck(False)
+    sshKeySearch(False)
 
     return True
 
@@ -362,6 +365,32 @@ def groupsCheck(showInfo=True):
     return True
 
 """
+    Nombre: SSH key search
+    Descripción: Función con la que buscamos claves SSH (.pem y .ppk) en el sistema y las mostramos
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de claves encontradas
+"""
+def sshKeySearch(showInfo=True):
+
+    # Variables necesarias
+    sshKeys = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos la búsqueda de claves SSH
+    printSpacer("Claves SSH")
+    sshKeys = modelSSHKeySearch("/")
+    printObtainedInfo(sshKeys)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -519,11 +548,15 @@ MAIN_MENU_OPTIONS = [
         "function": groupsCheck
     },
     {
-        "name": "8.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "8.- [SCAN] Claves SSH en el sistema",
+        "function": sshKeySearch
+    },
+    {
+        "name": "9.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "9.- Salir",
+        "name": "10.- Salir",
         "function": mainMenuExit
     }
 ]
