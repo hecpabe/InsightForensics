@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Modelo del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 08/11/2023
+    Última Modificación: 09/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -16,7 +16,7 @@ from functools import reduce
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
-    controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups
+    controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -599,6 +599,39 @@ def modelSSHKeySearch(path):
                     "info": sshKey,
                     "infoTypeID": 2
                 })
+    
+    return finalInformation
+
+"""
+    Nombre: Model | Environment variables check
+    Descripción: Función con la que comprobamos las variables de entorno del sistema
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de variables de entorno
+    Complejidad Espacial: O(n) n -> Cantidad de variables de entorno
+"""
+def modelEnvironmentVariablesCheck():
+
+    # Variables necesarias
+    environmentVariablesOutput = ""
+    finalInformation = []
+
+    # Obtenemos las variables de entorno
+    environmentVariablesOutput = controllerGetEnvironmentVariables()
+
+    # Preparamos la información para devolverla
+    for line in environmentVariablesOutput["value"].split("\n"):
+        if not line:
+            continue
+        lineSplitted = line.split("=")
+        variable = lineSplitted[0]
+        value = "=".join(lineSplitted[1:])
+        if value:
+            finalInformation.append({
+                "info": f"{variable} = {value}",
+                "infoTypeID": 0
+            })
     
     return finalInformation
 

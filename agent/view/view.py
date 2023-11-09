@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Vista del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 08/11/2023
+    Última Modificación: 09/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -14,7 +14,7 @@ import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
     modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
-    modelSSHKeySearch
+    modelSSHKeySearch, modelEnvironmentVariablesCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -182,6 +182,7 @@ def fullScan():
     capabilitiesCheck(False)
     groupsCheck(False)
     sshKeySearch(False)
+    environmentVariablesCheck(False)
 
     return True
 
@@ -391,6 +392,32 @@ def sshKeySearch(showInfo=True):
     return True
 
 """
+    Nombre: Environment variables check
+    Descripción: Función con la que comprobamos las variables de entorno del sistema y las mostramos
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de variables de entorno
+"""
+def environmentVariablesCheck(showInfo=True):
+
+    # Variables necesarias
+    environmentVariables = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+
+    # Realizamos la comprobación de variables de entorno
+    printSpacer("Variables de entorno")
+    environmentVariables = modelEnvironmentVariablesCheck()
+    printObtainedInfo(environmentVariables)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -552,11 +579,15 @@ MAIN_MENU_OPTIONS = [
         "function": sshKeySearch
     },
     {
-        "name": "9.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "9.- [SCAN] Variables de entorno del sistema",
+        "function": environmentVariablesCheck
+    },
+    {
+        "name": "10.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "10.- Salir",
+        "name": "11.- Salir",
         "function": mainMenuExit
     }
 ]

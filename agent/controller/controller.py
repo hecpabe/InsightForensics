@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Controlador de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 08/11/2023
+    Última Modificación: 09/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -136,6 +136,20 @@ def controllerGetUserGroups():
 
     # Obtenemos los grupos del usuario
     return executeCommand(["groups"])
+
+"""
+    Nombre: Controller | Get environment variables
+    Descripción: Función con la que obtenemos las variables de entorno actuales
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de variables de entorno
+"""
+def controllerGetEnvironmentVariables():
+
+    # Obtenemos las variables de entorno del sistema
+    return executeCommand(["printenv"])
 
 """
     Nombre: Controller | Scan files
