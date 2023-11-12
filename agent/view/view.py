@@ -14,7 +14,7 @@ import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
     modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
-    modelSSHKeySearch, modelEnvironmentVariablesCheck
+    modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -183,6 +183,7 @@ def fullScan():
     groupsCheck(False)
     sshKeySearch(False)
     environmentVariablesCheck(False)
+    sudoersFileCheck(False)
 
     return True
 
@@ -418,6 +419,35 @@ def environmentVariablesCheck(showInfo=True):
     return True
 
 """
+    Nombre: Sudoers file check
+    Descripción: Función con la que comprobamos el contenido del fichero /etc/sudoers y lo mostramos por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El programa tiene que ejecutarse con permisos de lectura del fichero /etc/sudoers
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de reglas del fichero /etc/sudoers
+"""
+def sudoersFileCheck(showInfo=True):
+
+    # Variables necesarias
+    sudoersFileContent = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos el fichero de sudoers
+    printSpacer("Fichero /etc/sudoers")
+    try:
+        sudoersFileContent = modelSudoersFileCheck()
+        printObtainedInfo(sudoersFileContent)
+    except Exception as e:
+        printError("No se ha podido comprobar el fichero /etc/sudoers", e)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -583,11 +613,15 @@ MAIN_MENU_OPTIONS = [
         "function": environmentVariablesCheck
     },
     {
-        "name": "10.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "10.- [SCAN] Fichero /etc/sudoers",
+        "function": sudoersFileCheck
+    },
+    {
+        "name": "11.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "11.- Salir",
+        "name": "12.- Salir",
         "function": mainMenuExit
     }
 ]

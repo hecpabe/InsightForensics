@@ -636,6 +636,198 @@ def modelEnvironmentVariablesCheck():
     return finalInformation
 
 """
+    Nombre: Model | Sudoers file check
+    Descripción: Función con la que comprobamos el contenido del fichero /etc/sudoers
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: El programa tiene que poder ejecutarse con privilegios de lectura sobre el fichero /etc/sudoers
+    Complejidad Temporal: O(n) n -> Cantidad de líneas del fichero /etc/sudoers
+    Complejidad Espacial: O(n) n -> Cantidad de líneas del fichero /etc/sudoers
+"""
+def modelSudoersFileCheck():
+
+    # Variables necesarias
+    sudoersFileContent = ""
+    filteredSudoersFileContent = []
+
+    sudoersDefaults = []
+    sudoersHostAlias = []
+    sudoersUserAlias = []
+    sudoersCommandAlias = []
+    sudoersUsersPrivileges = []
+    sudoersGroupsPrivileges = []
+
+    finalInformation = []
+
+    # Obtenemos el fichero de sudoers
+    sudoersFileContent = readFileContent("/etc/sudoers")
+
+    # Filtramos el contenido del fichero para quedarnos únicamente con los que nos importa
+    filteredSudoersFileContent = map(
+        lambda x: re.sub('\t+', ' ', x),
+        map(
+            lambda x: re.sub(' +', ' ', x),
+            filter(
+                lambda x: x and "#" not in x and "include" not in x,
+                sudoersFileContent.split("\n")
+            )
+        )
+    )
+
+    # Procesamos la información del fichero
+    for line in filteredSudoersFileContent:
+        # Si la línea contiene Defaults la consideramos como tal
+        if "Defaults" in line:
+            if len(sudoersDefaults) == 0:
+                sudoersDefaults.append({
+                    "info": "----- Configuración -----",
+                    "infoTypeID": 0
+                })
+            sudoersDefaults.append({
+                "info": line,
+                "infoTypeID": 0
+            })
+            continue
+        
+        # Si la línea contiene Host_Alias la consideramos como tal
+        if "Host_Alias" in line:
+            if len(sudoersHostAlias) == 0:
+                sudoersHostAlias.append({
+                    "info": "----- Host Alias -----",
+                    "infoTypeID": 0
+                })
+            splittedLine = line.split(" ")
+            alias = splittedLine[1]
+            value = " ".join(splittedLine[3:])
+            sudoersHostAlias.append({
+                "info": f"{alias} = {value}",
+                "infoTypeID": 0
+            })
+            continue
+        
+        # Si la línea contiene User_Alias la consideramos como tal
+        if "User_Alias" in line:
+            if len(sudoersUserAlias) == 0:
+                sudoersUserAlias.append({
+                    "info": "----- User Alias -----",
+                    "infoTypeID": 0
+                })
+            splittedLine = line.split(" ")
+            alias = splittedLine[1]
+            value = " ".join(splittedLine[3:])
+            sudoersUserAlias.append({
+                "info": f"{alias} = {value}",
+                "infoTypeID": 0
+            })
+            continue
+        
+        # Si la línea contiene Cmnd_Alias la consideramos como tal
+        if "Cmnd_Alias" in line:
+            if len(sudoersCommandAlias) == 0:
+                sudoersCommandAlias.append({
+                    "info": "----- Command Alias -----",
+                    "infoTypeID": 0
+                })
+            splittedLine = line.split(" ")
+            alias = splittedLine[1]
+            value = " ".join(splittedLine[3:])
+            sudoersCommandAlias.append({
+                "info": f"{alias} = {value}",
+                "infoTypeID": 0
+            })
+            continue
+        
+        # Si la línea contiene el carácter % significa que son permisos aplicables a un grupo
+        if "%" in line:
+            if len(sudoersGroupsPrivileges) == 0:
+                sudoersGroupsPrivileges.append({
+                    "info": "----- Privilegios de grupos -----",
+                    "infoTypeID": 0
+                })
+            splittedLine = line.split(" ")
+            group = splittedLine[0]
+            host, privileges = splittedLine[1].split("=")
+            splittedPrivileges = privileges.split(":")
+            targetUser = splittedPrivileges[0][1:]
+            targetGroup = splittedPrivileges[1][:-1]
+            commands = " ".join(splittedLine[2:])
+            infoTypeID = 0
+            
+            # Si puede ejecutar los comandos como root o como todos lo marcamos como aviso, si además puede ejecutar todos los
+            # comandos lo marcamos como peligro, sino, como información
+            if ("root" in targetUser or "root" in targetGroup or "ALL" in targetUser or "ALL" in targetGroup) and "root" not in group and "sudo" not in group:
+                if "ALL" in commands:
+                    infoTypeID = 3
+                else:
+                    infoTypeID = 2
+            sudoersGroupsPrivileges.append({
+                "info": f"{group} {host}={privileges} {commands}",
+                "infoTypeID": infoTypeID
+            })
+            continue
+
+        # Sino, son permisos aplicables a un usuario o alias
+        if len(sudoersUsersPrivileges) == 0:
+            sudoersUsersPrivileges.append({
+                "info": "----- Privilegios de usuarios -----",
+                "infoTypeID": 0
+            })
+        splittedLine = line.split(" ")
+        user = splittedLine[0]
+        host, privileges = splittedLine[1].split("=")
+        splittedPrivileges = privileges.split(":")
+        targetUser = splittedPrivileges[0][1:]
+        targetGroup = splittedPrivileges[1][:-1]
+        commands = " ".join(splittedLine[2:])
+        infoTypeID = 0
+
+        # Si puede ejecutar los comandos como root o como todos lo marcamos como aviso, si además puede ejecutar todos los 
+        # comandos lo marcamos como peligro, sino, como información
+        if ("root" in targetUser or "root" in targetGroup or "ALL" in targetUser or "ALL" in targetGroup) and "root" not in user:
+            if "ALL" in commands:
+                infoTypeID = 3
+            else:
+                infoTypeID = 2
+        sudoersUsersPrivileges.append({
+            "info": f"{user} {host}={privileges} {commands}",
+            "infoTypeID": infoTypeID
+        })
+
+    if len(sudoersDefaults):
+        sudoersDefaults.append({
+            "info": "",
+            "infoTypeID": 0
+        })
+    if len(sudoersHostAlias):
+        sudoersHostAlias.append({
+            "info": "",
+            "infoTypeID": 0
+        })
+    if len(sudoersUserAlias):
+        sudoersUserAlias.append({
+            "info": "",
+            "infoTypeID": 0
+        })
+    if len(sudoersCommandAlias):
+        sudoersCommandAlias.append({
+            "info": "",
+            "infoTypeID": 0
+        })
+    if len(sudoersUsersPrivileges):
+        sudoersUsersPrivileges.append({
+            "info": "",
+            "infoTypeID": 0
+        })
+    if len(sudoersGroupsPrivileges):
+        sudoersGroupsPrivileges.append({
+            "info": "",
+            "infoTypeID": 0
+        })
+
+    finalInformation = sudoersDefaults + sudoersHostAlias + sudoersUserAlias + sudoersCommandAlias + sudoersUsersPrivileges + sudoersGroupsPrivileges
+    return finalInformation
+
+"""
     Nombre: Filter files found
     Descripción: Función con la que filtramos los ficheros encontrados para evitar rutas que usa el sistema operativo
     Parámetros: 
