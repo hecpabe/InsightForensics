@@ -9,14 +9,15 @@
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
-import re
+import re, stat, pwd, grp
 from colorama import Fore
 from functools import reduce
 
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
-    controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables
+    controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables, \
+    controllerGetFileStats, controllerFullListPath
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -825,6 +826,181 @@ def modelSudoersFileCheck():
         })
 
     finalInformation = sudoersDefaults + sudoersHostAlias + sudoersUserAlias + sudoersCommandAlias + sudoersUsersPrivileges + sudoersGroupsPrivileges
+    return finalInformation
+
+"""
+    Nombre: Model | Shadow file permissions check
+    Descripción: Función con la que comprobamos los permisos del fichero /etc/shadow
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: El usuario tiene que tener permisos para poder listar el fichero /etc/shadow
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def modelShadowFilePermissionsCheck():
+
+    # Variables necesarias
+    fileListed = ""
+    fileStats = ""
+    fileMode = ""
+    fileOwner = ""
+    fileGroup = ""
+
+    fileUserInDanger = False
+    fileGroupInDanger = False
+
+    finalInformation = []
+
+    # Obtenemos las stats del fichero
+    fileListed = controllerFullListPath("/etc/shadow")
+    fileStats = controllerGetFileStats("/etc/shadow")
+    fileMode = fileStats.st_mode
+
+    finalInformation.append({
+        "info": f"{fileListed['value']}\n",
+        "infoTypeID": 0
+    })
+
+    # Comprobamos el propietario y el grupo del fichero
+    fileOwner = pwd.getpwuid(fileStats.st_uid)[0]
+    fileGroup = grp.getgrgid(fileStats.st_gid)[0]
+
+    if fileOwner not in ["root", "shadow"]:
+        fileUserInDanger = True
+        finalInformation.append({
+            "info": f"[!] Propietario del fichero: {fileOwner}",
+            "infoTypeID": 3
+        })
+    else:
+        finalInformation.append({
+            "info": f"[+] Propietario del fichero: {fileOwner}",
+            "infoTypeID": 1
+        })
+
+    if fileGroup not in ["root", "shadow"]:
+        fileGroupInDanger = True
+        finalInformation.append({
+            "info": f"[!] Fichero en el grupo: {fileGroup}",
+            "infoTypeID": 3
+        })
+    else:
+        finalInformation.append({
+            "info": f"[+] Fichero en el grupo: {fileGroup}",
+            "infoTypeID": 1
+        })
+
+    # Comprobamos que los permisos del fichero correspondan con rw- r-- ---
+    # USER
+    # Si el usuario puede leer o escribir en el fichero pero no debería - Peligro
+    if fileUserInDanger and ((fileMode & stat.S_IRUSR) or (fileMode & stat.S_IWUSR)):
+        finalInformation.append({
+            "info": f"[!] El usuario {fileOwner} puede leer o escribir en el fichero",
+            "infoTypeID": 3
+        })
+    # Si el usuario no puede leer y escribir debiendo poder hacerlo - Aviso
+    elif not fileUserInDanger and not ((fileMode & stat.S_IRUSR) and (fileMode & stat.S_IWUSR)):
+        finalInformation.append({
+            "info": f"[-] El usuario {fileOwner} no puede leer y escribir en el fichero",
+            "infoTypeID": 2
+        })
+    # Si el usuario puede leer y escribir en el fichero y debería hacerlo - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El usuario {fileOwner} puede leer y escribir en el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si el usuario puede ejecutar el fichero - Aviso
+    if fileMode & stat.S_IXUSR:
+        finalInformation.append({
+            "info": f"[-] El usuario {fileOwner} puede ejecutar el fichero",
+            "infoTypeID": 2
+        })
+    else:
+        finalInformation.append({
+            "info": f"[+] El usuario {fileOwner} no puede ejecutar el fichero",
+            "infoTypeID": 1
+        })
+    
+    # GROUP
+    # Si el grupo puede leer el fichero pero no debería - Peligro
+    if fileGroupInDanger and (fileMode & stat.S_IRGRP):
+        finalInformation.append({
+            "info": f"[!] El grupo {fileGroup} puede leer el fichero",
+            "infoTypeID": 3
+        })
+    # Si el grupo no puede leer el fichero pero debería - Aviso
+    elif not fileGroupInDanger and not (fileMode & stat.S_IRGRP):
+        finalInformation.append({
+            "info": f"[-] El grupo {fileGroup} no puede leer el fichero",
+            "infoTypeID": 2
+        })
+    # Si el grupo puede leer el fichero y debería - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El grupo {fileGroup} puede leer el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si el grupo puede escribir el fichero y es un grupo peligroso - Peligro
+    if fileGroupInDanger and (fileMode & stat.S_IWGRP):
+        finalInformation.append({
+            "info": f"[!] El grupo {fileGroup} puede escribir en el fichero",
+            "infoTypeID": 3
+        })
+    # Si el grupo puede escribir en el fichero pero no es un grupo peligroso - Aviso
+    elif not fileGroupInDanger and (fileMode & stat.S_IWGRP):
+        finalInformation.append({
+            "info": f"[-] El grupo {fileGroup} puede escribir en el fichero",
+            "infoTypeID": 2
+        })
+    # Si el grupo no puede escribir en el fichero - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El grupo {fileGroup} no puede escribir en el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si el grupo puede ejecutar el fichero - Aviso
+    if fileMode & stat.S_IXGRP:
+        finalInformation.append({
+            "info": f"[-] El grupo {fileGroup} puede ejecutar el fichero",
+            "infoTypeID": 2
+        })
+    # Si el grupo no puede ejecutar el fichero - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El grupo {fileGroup} no puede ejecutar el fichero",
+            "infoTypeID": 1
+        })
+    
+    # OTHER
+    # Si cualquiera puede leer o escribir el fichero - Peligro
+    if (fileMode & stat.S_IROTH) or (fileMode & stat.S_IWOTH):
+        finalInformation.append({
+            "info": f"[!] Cualquier usuario puede leer o escribir en el fichero",
+            "infoTypeID": 3
+        })
+    # Si cualquier usuario no puede leer o escribir el fichero - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] No cualquier usuario puede leer o escribir en el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si cualquier usuario puede ejecutar el fichero - Aviso
+    if fileMode & stat.S_IXOTH:
+        finalInformation.append({
+            "info": f"[-] El fichero es ejecutable por cualquiera",
+            "infoTypeID": 2
+        })
+    # Si el fichero no es ejecutable por cualquiera - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El fichero no es ejecutable por cualquiera",
+            "infoTypeID": 1
+        })
+    
     return finalInformation
 
 """

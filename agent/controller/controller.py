@@ -152,6 +152,36 @@ def controllerGetEnvironmentVariables():
     return executeCommand(["printenv"])
 
 """
+    Nombre: Controller | Get file stats
+    Descripción: Función con la que obtenemos las stats de un fichero
+    Parámetros:
+        0: [STRING] Ruta del fichero del que obtener las stats
+    Retorno: Stats del fichero
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetFileStats(path):
+
+    # Obtenemos las stats del fichero en la ruta indicada
+    return os.stat(path)
+
+"""
+    Nombre: Controller | Full list path
+    Descripción: Función con la que listamos de forma completa (ls -l) una ruta
+    Parámetros:
+        0: [STRING] Ruta a listar
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: El usuario tiene que poder tener permiso de listar esa ruta
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerFullListPath(path):
+
+    # Listamos de forma completa el contenido de la ruta
+    return executeCommand(["ls", "-l", path])
+
+"""
     Nombre: Controller | Scan files
     Descripción: Función con la que mandamos una lista de ficheros a escanear en VirusTotal
     Parámetros:

@@ -14,7 +14,7 @@ import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
     modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
-    modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck
+    modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck, modelShadowFilePermissionsCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -184,6 +184,7 @@ def fullScan():
     sshKeySearch(False)
     environmentVariablesCheck(False)
     sudoersFileCheck(False)
+    shadowFilePermissionsCheck(False)
 
     return True
 
@@ -448,6 +449,32 @@ def sudoersFileCheck(showInfo=True):
     return True
 
 """
+    Nombre: Shadow file permissions check
+    Descripción: Función con la que comprobamos los permisos del fichero /etc/shadow y mostramos el resultado por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El programa tiene que ejecutarse con permisos para poder listar el fichero /etc/shadow
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def shadowFilePermissionsCheck(showInfo=True):
+    
+    # Variables necesarias
+    shadowFilePermissions = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos los permisos del fichero /etc/shadow
+    printSpacer("Permisos del fichero /etc/shadow")
+    shadowFilePermissions = modelShadowFilePermissionsCheck()
+    printObtainedInfo(shadowFilePermissions)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -617,11 +644,15 @@ MAIN_MENU_OPTIONS = [
         "function": sudoersFileCheck
     },
     {
-        "name": "11.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "11.- [SCAN] Permisos del fichero /etc/shadow",
+        "function": shadowFilePermissionsCheck
+    },
+    {
+        "name": "12.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "12.- Salir",
+        "name": "13.- Salir",
         "function": mainMenuExit
     }
 ]
