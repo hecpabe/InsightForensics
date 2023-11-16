@@ -17,7 +17,7 @@ from functools import reduce
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
     controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables, \
-    controllerGetFileStats, controllerFullListPath
+    controllerGetFileStats, controllerFullListPath, controllerGetSUIDBinaries, controllerGetSGIDBinaries
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -94,6 +94,7 @@ DANGEROUS_GROUPS = [
     "shadow",
     "docker"
 ]
+DANGEROUS_BINARIES = []
 
 # ========== CODIFICACIÓN DE FUNCIONES ==========
 """
@@ -1001,6 +1002,170 @@ def modelShadowFilePermissionsCheck():
             "infoTypeID": 1
         })
     
+    return finalInformation
+
+"""
+    Nombre: Model | Bit SUID check
+    Descripción: Función con la que obtenemos los binarios con el bit SUID activado y analizamos si son una posible amenaza
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de binarios con el bit SUID activado
+    Complejidad Espacial: O(n) n -> Cantidad de binarios con el bit SUID activado
+"""
+def modelBitSUIDCheck():
+
+    # Variables necesarias
+    bitSUIDOutput = ""
+    filteredResult = []
+
+    dangerousBinaries = []
+    warningBinaries = []
+    safeBinaries = []
+
+    finalInformation = []
+
+    # Obtenemos los binarios con SUID activado
+    bitSUIDOutput = controllerGetSUIDBinaries("/")
+    
+    # Filtramos solo la información que nos interesa
+    filteredResult = list(
+        map(
+            lambda x: re.sub(' +', ' ', x),
+            bitSUIDOutput["value"].split("\n")
+        )
+    )
+
+    # Si no hemos cargado la lista de binarios peligrosos la cargamos
+    if len(DANGEROUS_BINARIES) <= 0:
+        for binary in readFileContent("./resources/dangerous_binaries.txt").split("\n"):
+            if binary:
+                DANGEROUS_BINARIES.append(binary)
+
+    # Iteramos sobre cada línea obteniendo las columnas que nos interesen y evaluando si es una posible amenaza
+    for line in filteredResult:
+        
+        if not line:
+            continue
+
+        # Filtramos la información que nos interesa
+        splittedLine = line.split(" ")
+
+        binaryPermissions = splittedLine[3]
+        binaryOwner = splittedLine[5]
+        binaryGroup = splittedLine[6]
+        binaryMonth = splittedLine[8]
+        binaryDay = splittedLine[9]
+        binaryYear = splittedLine[10]
+        binaryPath = splittedLine[11]
+
+        binaryName = binaryPath.split("/")[-1]
+
+        # Comprobamos si el binario es peligroso que tenga el SUID activado
+        # Es peligroso y propietario root -> Peligro
+        # Es peligroso y propietario otro que no es root -> Advertencia
+        # No es peligroso -> Sin peligro
+        info = f"{binaryPermissions} {binaryOwner} {binaryGroup} {binaryMonth} {binaryDay} {binaryYear} {binaryPath}"
+        if binaryName in DANGEROUS_BINARIES:
+            if binaryOwner == "root":
+                dangerousBinaries.append({
+                    "info": f"[PELIGRO] {info}",
+                    "infoTypeID": 3
+                })
+            else:
+                warningBinaries.append({
+                    "info": f"[AVISO] {info}",
+                    "infoTypeID": 2
+                })
+        else:
+            safeBinaries.append({
+                "info": f"[SIN PELIGRO] {info}",
+                "infoTypeID": 1
+            })
+    
+    finalInformation = dangerousBinaries + warningBinaries + safeBinaries
+    return finalInformation
+
+"""
+    Nombre: Model | Bit SGID check
+    Descripción: Función con la que obtenemos los binarios con el bit SGID activado y analizamos si son una posible amenaza
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de binarios con el bit SGID activado
+    Complejidad Espacial: O(n) n -> Cantidad de binarios con el bit SGID activado
+"""
+def modelBitSGIDCheck():
+
+    # Variables necesarias
+    bitSGIDOutput = ""
+    filteredResult = []
+
+    dangerousBinaries = []
+    warningBinaries = []
+    safeBinaries = []
+
+    finalInformation = []
+
+    # Obtenemos los binarios con permiso SGID activado
+    bitSGIDOutput = controllerGetSGIDBinaries("/")
+
+    # Filtramos solo la información que nos interesa
+    filteredResult = list(
+        map(
+            lambda x: re.sub(' +', ' ', x),
+            bitSGIDOutput["value"].split("\n")
+        )
+    )
+
+    # Si no hemos cargado la lista de binarios peligrosos la cargamos
+    if len(DANGEROUS_BINARIES) <= 0:
+        for binary in readFileContent("./resources/dangerous_binaries.txt").split("\n"):
+            if binary:
+                DANGEROUS_BINARIES.append(binary)
+
+    # Iteramos sobre cada línea obteniendo las columnas que nos interesen y evaluando si es una posible amenaza
+    for line in filteredResult:
+        
+        if not line:
+            continue
+
+        # Filtramos la información que nos interesa
+        splittedLine = line.split(" ")
+
+        binaryPermissions = splittedLine[3]
+        binaryOwner = splittedLine[5]
+        binaryGroup = splittedLine[6]
+        binaryMonth = splittedLine[8]
+        binaryDay = splittedLine[9]
+        binaryYear = splittedLine[10]
+        binaryPath = splittedLine[11]
+
+        binaryName = binaryPath.split("/")[-1]
+
+        # Comprobamos si el binario es peligroso que tenga el SUID activado
+        # Es peligroso y propietario root -> Peligro
+        # Es peligroso y propietario otro que no es root -> Advertencia
+        # No es peligroso -> Sin peligro
+        info = f"{binaryPermissions} {binaryOwner} {binaryGroup} {binaryMonth} {binaryDay} {binaryYear} {binaryPath}"
+        if binaryName in DANGEROUS_BINARIES:
+            if binaryGroup == "root":
+                dangerousBinaries.append({
+                    "info": f"[PELIGRO] {info}",
+                    "infoTypeID": 3
+                })
+            else:
+                warningBinaries.append({
+                    "info": f"[AVISO] {info}",
+                    "infoTypeID": 2
+                })
+        else:
+            safeBinaries.append({
+                "info": f"[SIN PELIGRO] {info}",
+                "infoTypeID": 1
+            })
+    
+    finalInformation = dangerousBinaries + warningBinaries + safeBinaries
     return finalInformation
 
 """

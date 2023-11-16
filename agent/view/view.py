@@ -14,7 +14,8 @@ import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
     modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
-    modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck, modelShadowFilePermissionsCheck
+    modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck, modelShadowFilePermissionsCheck, \
+    modelBitSUIDCheck, modelBitSGIDCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -185,6 +186,7 @@ def fullScan():
     environmentVariablesCheck(False)
     sudoersFileCheck(False)
     shadowFilePermissionsCheck(False)
+    bitsSUIDSGIDCheck(False)
 
     return True
 
@@ -475,6 +477,38 @@ def shadowFilePermissionsCheck(showInfo=True):
     return True
 
 """
+    Nombre: Bit SUID check
+    Descripción: Función con la que obtenemos los binarios con el bit SUID/SGID activado, analizamos si son una posible amenaza
+                    y mostramos los resultados por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros con el bit SUID/SGID activado
+"""
+def bitsSUIDSGIDCheck(showInfo=True):
+
+    # Variables necesarias
+    bitsSUID = []
+    bitsSGID = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos los binarios con SUID y SGID
+    printSpacer("Binarios con SUID activado")
+    bitsSUID = modelBitSUIDCheck()
+    printObtainedInfo(bitsSUID)
+
+    printSpacer("Binarios con SGID activado")
+    bitsSGID = modelBitSGIDCheck()
+    printObtainedInfo(bitsSGID)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -648,11 +682,15 @@ MAIN_MENU_OPTIONS = [
         "function": shadowFilePermissionsCheck
     },
     {
-        "name": "12.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "12.- [SCAN] Binarios con SUID/SGID activado",
+        "function": bitsSUIDSGIDCheck
+    },
+    {
+        "name": "13.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "13.- Salir",
+        "name": "14.- Salir",
         "function": mainMenuExit
     }
 ]

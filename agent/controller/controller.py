@@ -182,6 +182,36 @@ def controllerFullListPath(path):
     return executeCommand(["ls", "-l", path])
 
 """
+    Nombre: Controller | Get SUID binaries
+    Descripción: Función con la que obtenemos los binarios con el bit SUID activado
+    Parámetros:
+        0: [STRING] Ruta desde la que buscar de forma recursiva los binarios
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de binarios con el bit SUID activado
+"""
+def controllerGetSUIDBinaries(path):
+
+    # Obtenemos los binarios con SUID activado en la ruta indicada
+    return executeCommand(["find", path, "-perm", "-4000", "-ls"])
+
+"""
+    Nombre: Controller | Get SGID binaries
+    Descripción: Función con la que obtenemos los binarios con el bit SGID activado
+    Parámetros:
+        0: [STRING] Ruta desde la que buscar de forma recursiva los binarios
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de binarios con el bit SGID activado
+"""
+def controllerGetSGIDBinaries(path):
+
+    # Obtenemos los binarios con SGID activado en la ruta indicada
+    return executeCommand(["find", path, "-perm", "-2000", "-ls"])
+
+"""
     Nombre: Controller | Scan files
     Descripción: Función con la que mandamos una lista de ficheros a escanear en VirusTotal
     Parámetros:
