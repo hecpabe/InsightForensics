@@ -212,6 +212,75 @@ def controllerGetSGIDBinaries(path):
     return executeCommand(["find", path, "-perm", "-2000", "-ls"])
 
 """
+    Nombre: Controller | Get date
+    Descripción: Función con la que obtenemos la fecha del sistema
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetDate():
+
+    # Obtenemos la fecha del sistema y la devolvemos
+    return executeCommand(["date"])
+
+"""
+    Nombre: Controller | Get up time
+    Descripción: Función con la que obtenemos el momento desde el que el sistema lleva activo
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetUpTime():
+
+    # Obtenemos el tiempo desde el que el sistema lleva activo y lo devolvemos
+    return executeCommand(["uptime", "-s"])
+
+"""
+    Nombre: Controller | Get LSB release
+    Descripción: Función con la que obtenemos información sobre la release del sistema
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetLsbRelease():
+
+    # Obtenemos el output de lsb release y lo devolvemos
+    return executeCommand(["lsb_release", "-a"])
+
+"""
+    Nombre: Controller | Get uname
+    Descripción: Función con la que obtenemos información sobre la versión del sistema operativo
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetUname():
+
+    # Obtenemos el output de uname y lo devolvemos
+    return executeCommand(["uname", "-a"])
+
+"""
+    Nombre: Controller | Get CPU info
+    Descripción: Función con la que obtenemos la información acerca de la CPU del sistema
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetCPUInfo():
+
+    # Obtenemos la información que almacena el sistema de la CPU y la devolvemos
+    return executeCommand(["/bin/cat", "/proc/cpuinfo"])
+
+"""
     Nombre: Controller | Scan files
     Descripción: Función con la que mandamos una lista de ficheros a escanear en VirusTotal
     Parámetros:

@@ -15,7 +15,7 @@ import os
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
     modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
     modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck, modelShadowFilePermissionsCheck, \
-    modelBitSUIDCheck, modelBitSGIDCheck
+    modelBitSUIDCheck, modelBitSGIDCheck, modelSystemInfoCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -176,6 +176,7 @@ def fullScan():
     printScanInfo()
 
     # Escaneamos el sistema
+    systemInfoCheck(False)
     fileSystemAnalysis(False)
     systemPathAnalysis(False)
     editableRootFilesSearch(False)
@@ -509,6 +510,32 @@ def bitsSUIDSGIDCheck(showInfo=True):
     return True
 
 """
+    Nombre: System info check
+    Descripción: Función con la que obtenemos información del sistema y la mostramos por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def systemInfoCheck(showInfo=True):
+
+    # Variables necesarias
+    systemInfo = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos la información del sistema y la mostramos por la terminal
+    printSpacer("Información del sistema")
+    systemInfo = modelSystemInfoCheck()
+    printObtainedInfo(systemInfo)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -638,59 +665,63 @@ def mainMenuExit():
 # ========== DECLARACIONES GLOBALES ==========
 MAIN_MENU_OPTIONS = [
     {
-        "name": "1.- [SCAN] Análisis total",
+        "name": "1.- [SCAN] Obtención de información del sistema",
+        "function": systemInfoCheck
+    },
+    {
+        "name": "2.- [SCAN] Análisis total",
         "function": fullScan
     },
     {
-        "name": "2.- [SCAN] Análisis del sistema de ficheros",
+        "name": "3.- [SCAN] Análisis del sistema de ficheros",
         "function": fileSystemAnalysis
     },
     {
-        "name": "3.- [SCAN] Búsqueda de ficheros .sh en el path",
+        "name": "4.- [SCAN] Búsqueda de ficheros .sh en el path",
         "function": systemPathAnalysis
     },
     {
-        "name": "4.- [SCAN] Búsqueda de ficheros de root editables por cualquiera",
+        "name": "5.- [SCAN] Búsqueda de ficheros de root editables por cualquiera",
         "function": editableRootFilesSearch
     },
     {
-        "name": "5.- [SCAN] Hosts del equipo",
+        "name": "6.- [SCAN] Hosts del equipo",
         "function": etcHostsCheck
     },
     {
-        "name": "6.- [SCAN] Capabilities del equipo",
+        "name": "7.- [SCAN] Capabilities del equipo",
         "function": capabilitiesCheck
     },
     {
-        "name": "7.- [SCAN] Grupos del sistema",
+        "name": "8.- [SCAN] Grupos del sistema",
         "function": groupsCheck
     },
     {
-        "name": "8.- [SCAN] Claves SSH en el sistema",
+        "name": "9.- [SCAN] Claves SSH en el sistema",
         "function": sshKeySearch
     },
     {
-        "name": "9.- [SCAN] Variables de entorno del sistema",
+        "name": "10.- [SCAN] Variables de entorno del sistema",
         "function": environmentVariablesCheck
     },
     {
-        "name": "10.- [SCAN] Fichero /etc/sudoers",
+        "name": "11.- [SCAN] Fichero /etc/sudoers",
         "function": sudoersFileCheck
     },
     {
-        "name": "11.- [SCAN] Permisos del fichero /etc/shadow",
+        "name": "12.- [SCAN] Permisos del fichero /etc/shadow",
         "function": shadowFilePermissionsCheck
     },
     {
-        "name": "12.- [SCAN] Binarios con SUID/SGID activado",
+        "name": "13.- [SCAN] Binarios con SUID/SGID activado",
         "function": bitsSUIDSGIDCheck
     },
     {
-        "name": "13.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "14.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "14.- Salir",
+        "name": "15.- Salir",
         "function": mainMenuExit
     }
 ]

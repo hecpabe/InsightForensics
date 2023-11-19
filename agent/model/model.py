@@ -17,7 +17,8 @@ from functools import reduce
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
     controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables, \
-    controllerGetFileStats, controllerFullListPath, controllerGetSUIDBinaries, controllerGetSGIDBinaries
+    controllerGetFileStats, controllerFullListPath, controllerGetSUIDBinaries, controllerGetSGIDBinaries, controllerGetDate, \
+    controllerGetUpTime, controllerGetLsbRelease, controllerGetUname, controllerGetCPUInfo
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -1166,6 +1167,59 @@ def modelBitSGIDCheck():
             })
     
     finalInformation = dangerousBinaries + warningBinaries + safeBinaries
+    return finalInformation
+
+"""
+    Nombre: Model | System info check
+    Descripción: Función con la que obtenemos información del sistema
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def modelSystemInfoCheck():
+
+    # Variables necesarias
+    dateOutput = ""
+    lsbReleaseOutput = ""
+    unameOutput = ""
+    cpuInfoOutput = ""
+    upTimeOutput = ""
+
+    finalInformation = []
+
+    # Obtenemos la información del sistema y la añadimos al resultado
+    dateOutput = controllerGetDate()["value"]
+    finalInformation.append({
+        "info": f"Fecha: {dateOutput}",
+        "infoTypeID": 0
+    })
+
+    upTimeOutput = controllerGetUpTime()["value"]
+    finalInformation.append({
+        "info": f"Inicio del sistema: {upTimeOutput}",
+        "infoTypeID": 0
+    })
+
+    lsbReleaseOutput = controllerGetLsbRelease()["value"]
+    finalInformation.append({
+        "info": f"----- Información de la release -----\n{lsbReleaseOutput}",
+        "infoTypeID": 0
+    })
+
+    unameOutput = controllerGetUname()["value"]
+    finalInformation.append({
+        "info": f"Información del sistema operativo: {unameOutput}",
+        "infoTypeID": 0
+    })
+
+    cpuInfoOutput = controllerGetCPUInfo()["value"]
+    finalInformation.append({
+        "info": f"----- Información de la CPU -----\n{cpuInfoOutput}",
+        "infoTypeID": 0
+    })
+
     return finalInformation
 
 """
