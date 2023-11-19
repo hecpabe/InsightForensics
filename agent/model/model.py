@@ -18,7 +18,8 @@ from controller.controller import controllerFindRecentModifiedFiles, controllerF
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
     controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables, \
     controllerGetFileStats, controllerFullListPath, controllerGetSUIDBinaries, controllerGetSGIDBinaries, controllerGetDate, \
-    controllerGetUpTime, controllerGetLsbRelease, controllerGetUname, controllerGetCPUInfo, controllerGetHostname
+    controllerGetUpTime, controllerGetLsbRelease, controllerGetUname, controllerGetCPUInfo, controllerGetHostname, \
+    controllerGetNetworkInterfaces, controllerGetNetworkConnections
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -1230,6 +1231,80 @@ def modelSystemInfoCheck():
     return finalInformation
 
 """
+    Nombre: Model | Network interfaces check
+    Descripción: Función con la que comprobamos la información de las interfaces de red
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de interfaces de red
+"""
+def modelNetworkInterfacesCheck():
+
+    # Variables necesarias
+    networkInterfacesOutput = ""
+    finalInformation = []
+
+    # Obtenemos la información de las interfaces de red y la añadimos para devolverla
+    networkInterfacesOutput = controllerGetNetworkInterfaces()["value"]
+    finalInformation.append({
+        "info": networkInterfacesOutput,
+        "infoTypeID": 0
+    })
+
+    return finalInformation
+
+"""
+    Nombre: Model | Network connections check
+    Descripción: Función con la que comprobamos las conexiones de red tanto a la escucha como establecidas
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de conexiones
+    Complejidad Espacial: O(n) n -> Cantidad de conexiones
+"""
+def modelNetworkConnectionsCheck():
+
+    # Variables necesarias
+    listeningConnectionsOutput = ""
+    establishedConnectionsOutput = ""
+
+    filteredListeningConnectionsOutput = ""
+    filteredEstablishedConnectionsOutput = ""
+
+    allConnections = []
+
+    finalInformation = []
+
+    # Obtenemos las conexiones a la escucha
+    listeningConnectionsOutput = controllerGetNetworkConnections(listening=True)["value"]
+    filteredListeningConnectionsOutput = filterNetworkConnections(listeningConnectionsOutput)
+
+    # Obtenemos las conexiones establecidas
+    establishedConnectionsOutput = controllerGetNetworkConnections()["value"]
+    filteredEstablishedConnectionsOutput = filterNetworkConnections(establishedConnectionsOutput)
+
+    # Juntamos la información en una misma lista
+    allConnections = filteredListeningConnectionsOutput + filteredEstablishedConnectionsOutput
+
+    # Procesamos la información antes de agregarla
+    for line in allConnections:
+
+        splittedLine = line.split(" ")
+
+        protocol = splittedLine[0]
+        localIP = splittedLine[3]
+        foreignIP = splittedLine[4]
+        connectionStatus = splittedLine[5]
+
+        finalInformation.append({
+            "info": f"Conexión: {protocol} | {localIP} <-> {foreignIP} ({connectionStatus})",
+            "infoTypeID": 0
+        })
+    
+    return finalInformation
+
+"""
     Nombre: Filter files found
     Descripción: Función con la que filtramos los ficheros encontrados para evitar rutas que usa el sistema operativo
     Parámetros: 
@@ -1254,3 +1329,36 @@ def filterFilesFound(filesFound, filesFilter):
     )
 
     return filteredResult
+
+"""
+    Nombre Filter network connections
+    Descripción: Función con la que filtramos el output de las conexiones de red
+    Parámetros:
+        0: [STRING] Output de la obtención de las conexiones de red
+    Retorno: [List] Lista con las líneas filtradas
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad de conexiones de red
+    Complejidad Espacial: O(n) n -> Cantidad de conexiones de red
+"""
+def filterNetworkConnections(networkConnections):
+
+    # Variables necesarias
+    filteredNetworkConnections = []
+
+    filteredNetworkConnections = list(
+        # Omitimos espacios innecesarios
+        map(
+            lambda x: re.sub(' +', ' ', x),
+            # Comprobamos que la línea de las conexiones contenga información útil
+            filter(
+                lambda x: "tcp" in x or "udp" in x,
+                # Comprobamos que la línea de las conexiones no esté vacía
+                filter(
+                    lambda x: x,
+                    networkConnections.split("\n")
+                )
+            )
+        )
+    )
+
+    return filteredNetworkConnections

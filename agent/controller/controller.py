@@ -295,6 +295,46 @@ def controllerGetCPUInfo():
     return executeCommand(["/bin/cat", "/proc/cpuinfo"])
 
 """
+    Nombre: Controller | Get network interfaces
+    Descripción: Función con la que obtenemos la información acerca de las interfaces de red
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de interfaces de red
+"""
+def controllerGetNetworkInterfaces():
+
+    # Obtenemos las interfaces de red y las devolvemos
+    return executeCommand(["ip", "a"])
+
+"""
+    Nombre: Controller | Get network connections
+    Descripción: Función con la que obtenemos las conexiones de red, en escucha o establecidas
+    Parámetros:
+        0: [BOOL] True para obtener las conexiones a la escucha y false para obtener las conexiones establecidas
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de conexiones
+"""
+def controllerGetNetworkConnections(listening=False):
+
+    # Variables necesarias
+    command = []
+
+    # Construimos el comando
+    command.append("netstat")
+    command.append("-t")
+    command.append("-u")
+
+    if listening:
+        command.append("-l")
+
+    # Obtenemos las conexiones de red a la escucha y las devolvemos
+    return executeCommand(command)
+
+"""
     Nombre: Controller | Scan files
     Descripción: Función con la que mandamos una lista de ficheros a escanear en VirusTotal
     Parámetros:

@@ -15,7 +15,7 @@ import os
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
     modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
     modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck, modelShadowFilePermissionsCheck, \
-    modelBitSUIDCheck, modelBitSGIDCheck, modelSystemInfoCheck
+    modelBitSUIDCheck, modelBitSGIDCheck, modelSystemInfoCheck, modelNetworkInterfacesCheck, modelNetworkConnectionsCheck
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -188,6 +188,7 @@ def fullScan():
     sudoersFileCheck(False)
     shadowFilePermissionsCheck(False)
     bitsSUIDSGIDCheck(False)
+    networkAnalysis(False)
 
     return True
 
@@ -536,6 +537,38 @@ def systemInfoCheck(showInfo=True):
     return True
 
 """
+    Nombre: Network analysis
+    Descripción: Función con la que comprobamos las interfaces y las conexiones de red, y las mostramos por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de interfaces y conexiones de red
+"""
+def networkAnalysis(showInfo=True):
+
+    # Variables necesarias
+    networkInterfaces = []
+    networkConnections = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Obtenemos la información de las interfaces de red
+    printSpacer("Interfaces de red")
+    networkInterfaces = modelNetworkInterfacesCheck()
+    printObtainedInfo(networkInterfaces)
+
+    # Obtenemos la información de las conexiones de red
+    printSpacer("Conexiones de red")
+    networkConnections = modelNetworkConnectionsCheck()
+    printObtainedInfo(networkConnections)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
     Parámetros: Ninguno
@@ -717,11 +750,15 @@ MAIN_MENU_OPTIONS = [
         "function": bitsSUIDSGIDCheck
     },
     {
-        "name": "14.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "14.- [SCAN] Información de red y conexiones",
+        "function": networkAnalysis
+    },
+    {
+        "name": "15.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "15.- Salir",
+        "name": "16.- Salir",
         "function": mainMenuExit
     }
 ]
