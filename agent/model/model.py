@@ -18,7 +18,7 @@ from controller.controller import controllerFindRecentModifiedFiles, controllerF
     controllerFindFilesByExtensions, readFileContent, controllerScanFiles, controllerCheckFiles, controllerGetSystemPath, \
     controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables, \
     controllerGetFileStats, controllerFullListPath, controllerGetSUIDBinaries, controllerGetSGIDBinaries, controllerGetDate, \
-    controllerGetUpTime, controllerGetLsbRelease, controllerGetUname, controllerGetCPUInfo
+    controllerGetUpTime, controllerGetLsbRelease, controllerGetUname, controllerGetCPUInfo, controllerGetHostname
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -1181,6 +1181,7 @@ def modelBitSGIDCheck():
 def modelSystemInfoCheck():
 
     # Variables necesarias
+    hostnameOutput = ""
     dateOutput = ""
     lsbReleaseOutput = ""
     unameOutput = ""
@@ -1190,6 +1191,12 @@ def modelSystemInfoCheck():
     finalInformation = []
 
     # Obtenemos la información del sistema y la añadimos al resultado
+    hostnameOutput = controllerGetHostname()["value"]
+    finalInformation.append({
+        "info": f"Hostname: {hostnameOutput}",
+        "infoTypeID": 0
+    })
+
     dateOutput = controllerGetDate()["value"]
     finalInformation.append({
         "info": f"Fecha: {dateOutput}",

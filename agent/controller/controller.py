@@ -212,6 +212,20 @@ def controllerGetSGIDBinaries(path):
     return executeCommand(["find", path, "-perm", "-2000", "-ls"])
 
 """
+    Nombre: Controller | Get hostname
+    Descripción: Función con la que obtenemos el nombre del equipo
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetHostname():
+
+    # Obtenemos el hostname y lo devolvemos
+    return executeCommand(["hostname"])
+
+"""
     Nombre: Controller | Get date
     Descripción: Función con la que obtenemos la fecha del sistema
     Parámetros: Ninguno
