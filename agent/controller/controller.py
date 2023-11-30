@@ -9,8 +9,9 @@
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
-import subprocess, requests, time, os
-
+import subprocess, requests, time, os, re
+from  datetime import datetime, timedelta
+from collections import defaultdict
 # ========== DECLARACIONES GLOBALES ==========
 
 # ========== CODIFICACIÓN DE FUNCIONES ==========
@@ -517,3 +518,360 @@ def readFileContent(path):
     
     # Retornamos el contenido del fichero
     return fileContent
+
+
+
+"""
+    Nombre: Controller | Get Path
+    Descripción: Función con la que obtenemos el PATH
+    Parámetros: Ninguno
+    Retorno: Diccionario con formato {error: Boolena, value: PATH}
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetPath():
+
+    return executeCommand(['printenv','PATH'])
+
+
+"""
+    Nombre: Controller | Get File Acces
+    Descripción: Funcion para verificar si se puede escribir en un fichero
+    Parámetros: Ruta en la cual se quiere escribir
+    Retorno: Booleano si tiene o no acceso
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def controllerGetFileAcces(ruta):
+
+    try:
+        # Intenta crear un archivo temporal en el directorio
+        with open(os.path.join(ruta, 'temp_file.txt'), 'w') as temp_file:
+            temp_file.write("holaaaa")
+        # Elimina el archivo temporal
+        os.remove(os.path.join(ruta, 'temp_file.txt'))
+        return True  # Tienes permisos de escritura
+    except OSError as e:
+        print(f"No tienes permisos de escritura en {ruta}: {e}")
+        return False  # No tienes permisos de escritura
+
+
+"""
+    Nombre: Controller | Get Total Time and Times Logged
+    Descripción: Funcion para obetner el numero de veces que se a logeado un usuario y su tiempo de actividad total
+    Parámetros: [LIST] Lista de la cual se recogera la información para analizarla
+    Retorno: [DICT] Diccionario con el formato {"usuario",[veces logeado, tiempo total de actividad]}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerGetTotalTime_TimesLogged(registros):
+    informacion_usuarios = defaultdict(lambda: [0, 0]) # Inicializar un diccionario con valores predeterminados
+
+    for registro in registros:
+        elementos = registro.split()
+        usuario = elementos[0]
+        tiempo = elementos[-1][1:-1]  # Eliminar los paréntesis
+
+        informacion_usuarios[usuario][0] += 1
+
+        # Extraer las horas y minutos del tiempo en formato (HH:MM)
+        horas, minutos = map(int, tiempo.split(':'))
+        tiempo_en_minutos = horas * 60 + minutos
+        informacion_usuarios[usuario][1] += tiempo_en_minutos
+
+    
+    return dict(informacion_usuarios)
+
+
+
+"""
+    Nombre: Controller | Get Usernames On Last Log
+    Descripción: Función para obtener los nombres de los usuarios que estan conectados actualmente
+    Parámetros: [LIST] Lista de la cual se recogera la información para analizarla
+    Retorno: Conjunto con los usuarios logeados actualmete
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerGetUsernamesOnLastLog(registros):
+    nombres_usuarios = set()  # Usar un conjunto en lugar de una lista
+
+    for registro in registros:
+        elementos = registro.split()
+        if len(elementos) > 0:
+            nombre_usuario = elementos[0]
+            nombres_usuarios.add(nombre_usuario)
+
+    return list(nombres_usuarios)  # Convertir el conjunto en una lista antes de retornarlo
+
+
+
+"""
+    Nombre: Controller History Logged
+    Descripción: Funcion para obtener y filtrar los inicios de sesision
+    Parámetros: INT Dias desde los que se quiero analizar el registro (Default = 7).
+    Retorno: [DICT] Diccionario con el formato {"error": Bool, "value": Resultado}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerHistoryLogged(days_since=7):
+
+
+    # Obtén la fecha y hora actual
+    fecha_actual = datetime.now()
+
+    # Calcula la fecha hace un mes
+    fecha_to_calculate = fecha_actual - timedelta(days=days_since)
+
+    # Formatea la fecha en el formato necesario para -s
+    since = fecha_to_calculate.strftime("%Y%m%d")
+    
+    #Loggin en el dia de hoy
+    since=since+"000000"  
+
+    #Ejecutamos el comando 
+    lastLogon= executeCommand(["last","-s" ,since])
+
+    if(lastLogon["error"]==False):
+        
+        output=lastLogon["value"].strip().split("\n")
+        registro=list(filter(lambda x: "wtmp" not in x and "+" not in x, output))
+        registro=registro[:-1]
+
+        filteredLoggedUser=list(
+            filter(
+                lambda x: "still logged in" in x , registro))
+
+        filteredList=list(
+            filter(
+                lambda x: "reboot" not in x and "wtmp" not in x and "+" not in x and "still logged in" not in x, registro))
+
+        filteredRegist = list(
+            map(
+                lambda x: re.sub(' +', ' ', x), 
+                filteredList
+            )
+        )
+
+        filteredLoggedUser = list(
+            map(
+                lambda x: re.sub(' +', ' ', x), 
+                filteredLoggedUser
+            )
+        )
+        
+        informacion_usuarios = controllerGetTotalTime_TimesLogged(filteredRegist)
+        informacion_logeados = controllerGetUsernamesOnLastLog(filteredLoggedUser)
+        
+
+        #Tener en cuenta que puede ser que el diccionario de infomacion_usuarios este vacio por que aun no se haya desconectado nadie el dia de hoy.
+        contentToReturn= {"error":False,
+                "value": [informacion_usuarios, informacion_logeados]}
+
+
+    else:
+
+        contentToReturn= {"error":True,
+                "value": f"Error executando el comando last -s {days_since}"}
+    
+    return contentToReturn
+
+
+
+"""
+    Nombre: Controller | Crontab
+    Descripción: Funcion para obtener el listados de todas las tareas programadas del sistema y usuarios
+    Parámetros: Ninguno
+    Retorno: [DICT] Retorna 3 diccionarios con el formato {"error": Boolean, "value": Valores registrados}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerCrontab():
+
+    crontrab_e=controllerCrontab_e()
+    etcCrontab=controllerEtcCrontab()
+    periodicCrontab=controllerGetPeriodic()
+    
+    return crontrab_e,etcCrontab,periodicCrontab
+
+
+"""
+    Nombre: Controller | Etc Crontab
+    Descripción: Funcion para obtener el listados de todas las tareas programadas del sistema
+    Parámetros: Ninguno
+    Retorno: [DICT] Retorna un diccionario con el formato {"error": Boolean, "value": Valores registrados}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerEtcCrontab():
+
+    etcCrontab=executeCommand(["cat","/etc/crontab"])
+    crontabDict={}
+    contentToReturn = {
+        "error": False,
+        "value": ""
+    }
+
+
+    if(etcCrontab["error"]==False):
+
+        filteredCrontab=etcCrontab["value"].split("\n")
+        
+        filteredCrontab = list(
+            filter(
+            lambda x: len(x), filteredCrontab))
+
+        filteredCrontab = list(
+            filter(
+            lambda x: x[0]!="#", filteredCrontab))
+        
+
+        crontabDict={"etcCrontab": filteredCrontab}
+        contentToReturn = {"error":False,
+                           "value": crontabDict}
+
+
+    else:
+        contentToReturn = {"error": True,
+                           "value": "Error executing commnad cat /etc/crontab"}
+    return contentToReturn
+
+
+"""
+    Nombre: Controller | Etc Crontab
+    Descripción: Funcion para obtener el listados de todas las tareas programadas de los usuarios
+    Parámetros: Ninguno
+    Retorno: [DICT] Retorna un diccionario con el formato {"error": Boolean, "value": Valores registrados}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerCrontab_e():
+
+    crontab_e=executeCommand(["ls","/var/spool/cron/crontabs/"])
+    crontrabDict={}
+    contentToReturn = {
+        "error": False,
+        "value": ""
+    }
+    if(crontab_e["error"]==False):
+        usersWithCrontabs=crontab_e["value"].split("\n")
+        usersWithCrontabs=usersWithCrontabs[:-1] #Sacamos la ultima linea
+        
+
+        if(len(usersWithCrontabs)>0):
+            for user in usersWithCrontabs:
+                catCrontab=executeCommand(["cat",f"/var/spool/cron/crontabs/{user}"])
+                if(catCrontab["error"]==False):
+                    catCrontab=catCrontab["value"].split("\n")
+                    catCrontab=catCrontab[:-1]
+                
+                filteredCrontab = list(
+                    filter(
+                        lambda x: x[0]!="#", catCrontab))
+                
+                crontrabDict[user]=filteredCrontab
+
+            contentToReturn = {"error": False,
+                    "value": crontrabDict}
+        else:
+            contentToReturn = {"error":False,
+                    "value":"There are no users in directory /var/spool/cron/crontabs"}
+    else:
+        contentToReturn = {"error":True,
+                    "value":f"Error executing command ls /var/spool/cron/crontabs "}
+
+    return contentToReturn
+
+
+"""
+    Nombre: Controller | Get Per
+    Descripción: Funcion para obtener el listados de todas las tareas programadas periodicas d daily ...
+    Parámetros: Ninguno
+    Retorno: [DICT] Retorna un diccionario con el formato {"error": Boolean, "value": Valores registrados}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerGetPeriodic():
+
+    d=executeCommand(["ls", "/etc/cron.d"])
+    daily=executeCommand(["ls", "/etc/cron.daily"])
+    hourly=executeCommand(["ls", "/etc/cron.hourly"])
+    monthly=executeCommand(["ls", "/etc/cron.monthly"])
+    weekly=executeCommand(["ls", "/etc/cron.weekly"])
+
+    contentToReturn = {
+        "error": False,
+        "value": {"d":filterRegist(d["value"]),
+                  "daily":filterRegist(daily["value"]),
+                  "hourly":filterRegist(hourly["value"]),
+                  "monthly":filterRegist(monthly["value"]),
+                  "weekly":filterRegist(weekly["value"]),}
+    }
+
+    return contentToReturn
+
+
+
+"""
+    Nombre: filter Resgister
+    Descripción:  Funcion para filtar los resultados de las tareas programadad periodicas
+    Parámetros: String con los registros a filtrar
+    Retorno: Lista con los archivos que se ejecutan
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def filterRegist(resgist):
+    resgist=resgist.split("\n")
+    resgist=resgist[:-1] #Sacamos la ultima linea
+    return resgist
+
+
+
+"""
+    Nombre: Controller | System Ctl
+    Descripción: Funcion para obtener la salida del system clt y los archivos que se ejecutan al unicio
+    Parámetros: Ninguno
+    Retorno: [DICT] Retorna un diccionario con el formato {"error": Boolean, "value": Valores registrados}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerSystemCtl():
+
+
+    return executeCommand(["systemctl","list-unit-files","--state=enabled"])
+
+
+"""
+    Nombre: Controller | Initd
+    Descripción: Funcion para obtener la salida de todos los archivos que se ejecutan al unicio de la máquina
+    Parámetros: Ninguno
+    Retorno: [DICT] Retorna un diccionario con el formato {"error": Boolean, "value": Valores registrados}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerInitd():
+
+    return executeCommand(["ls", "/etc/init.d"])
+
+"""
+    Nombre: Controller | authLog
+    Descripción: Funcion para obtener la salida de todos los archivos que se ejecutan al unicio de la máquina
+    Parámetros: 
+        0 [String] rute en la cual se obtendra el archivo auth.log 
+    Retorno: [DICT] Retorna un diccionario con el formato {"error": Boolean, "value": Valores registrados}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Lineas de fichero de registro
+    Complejidad Espacial: O(n) n -> Lineas de fichero de registro
+"""
+def controllerAuthLog(rute):
+
+    return executeCommand(["ls", f"{rute}"])
