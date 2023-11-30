@@ -15,7 +15,8 @@ import os
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
     modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
     modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck, modelShadowFilePermissionsCheck, \
-    modelBitSUIDCheck, modelBitSGIDCheck, modelSystemInfoCheck, modelNetworkInterfacesCheck, modelNetworkConnectionsCheck
+    modelBitSUIDCheck, modelBitSGIDCheck, modelSystemInfoCheck, modelNetworkInterfacesCheck, modelNetworkConnectionsCheck, \
+    modelCheckPath, modelEtcPasswd, modelEtcFilePermissionsCheck, modelCheckHistoryLogged, modelCheckCrontab, modelCheckInitProccess, modelCheckAuthLog
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -189,6 +190,11 @@ def fullScan():
     shadowFilePermissionsCheck(False)
     bitsSUIDSGIDCheck(False)
     networkAnalysis(False)
+    pathRutesAnalysis(False)
+    etcPasswdAnalysis(False)
+    historyLoggedAnalysis(False)
+    crontabAnalysis(False)
+    authLogAnalysis(False)
 
     return True
 
@@ -571,13 +577,17 @@ def networkAnalysis(showInfo=True):
 """
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
-    Parámetros: Ninguno
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
     Retorno: [BOOL] Si el menu principal continua o no
     Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
     Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
 """
-def suspectFileAnalysis():
-    
+def suspectFileAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
     # Variables necesarias
     infoFiles = []
     warningFiles = []
@@ -634,6 +644,190 @@ def suspectFileAnalysis():
 
     return True
 
+
+
+"""
+    Nombre: systemInitAnalysis
+    Descripción: Función con la que analizamos los ficheros de inicio del equipo
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
+"""
+def systemInitAnalysis(showInfo=True):
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+
+
+
+    # Obtenemos la información del PATH
+    printSpacer("Ejecuion durante el inicio")
+    systemInitOutPut=modelCheckInitProccess()
+    printObtainedInfo(systemInitOutPut)
+
+
+    return True
+
+
+
+"""
+    Nombre: Path Rutes Analysis
+    Descripción: Funcion con la que mostramos los resultados del analisis de la variable $PATH
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def pathRutesAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("VARIABLE PATH")
+    analyzedPathResult = modelCheckPath()
+    printObtainedInfo(analyzedPathResult)
+
+
+    return True
+
+
+
+"""
+    Nombre: etcPasswdAnalysis
+    Descripción: Funcion para analizar el archivo etc/passwd
+
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def etcPasswdAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("ETC PASSWD")
+    analyzedEtcResult = modelEtcPasswd()
+    printObtainedInfo(analyzedEtcResult)
+
+
+    return True
+
+
+"""
+    Nombre: etcPasswd PermisionAnalysis
+    Descripción: Funcion para analizar los permisos de archivo etc/passwd
+
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def etcPasswdPermissionAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("ETC PASSWD PERMISION")
+    analyzedEtcPermissionResult = modelEtcFilePermissionsCheck()
+    printObtainedInfo(analyzedEtcPermissionResult)
+
+
+    return True
+
+
+"""
+    Nombre: history logged Analysis
+    Descripción: Funcion para mostrar los usuarios, tiempo y veces loggedos en el sistema
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def historyLoggedAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("LOGGED USERS")
+    analyzedHistoryResult = modelCheckHistoryLogged()
+    printObtainedInfo(analyzedHistoryResult)
+
+
+    return True
+
+
+
+"""
+    Nombre: Path Rutes Analysis
+    Descripción: Funcion con la que mostramos los resultados del analisis de la variable $PATH
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def crontabAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("TAREAS PROGRAMADAS")
+    analyzedCrontabResult = modelCheckCrontab()
+    printObtainedInfo(analyzedCrontabResult)
+
+
+    return True
+
+"""
+    Nombre: Path Rutes Analysis
+    Descripción: Funcion para analizar el contenido del auth.log
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def authLogAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    try:
+        rute = int(input("Introduzca la ruta del auth.log: "))
+        max_tries = int(input("Introduzca la ruta del auth.log: "))
+        dias_check =  int(input("Introduzca los dias desde los que comprobar: "))
+        # Obtenemos la información del PATH
+        printSpacer("ANALISIS DEL AUTH.LOG")
+        analyzedAuthLogResult = modelCheckAuthLog(rute=rute, dias_check=dias_check, max_tries=max_tries)
+        printObtainedInfo(analyzedAuthLogResult)
+    except Exception as e:
+        printError("Error en el analisis del auth.log", e)
+    return True
+
+
 """
     Nombre: Print obtained info
     Descripción: Función con la que mostramos de forma correcta el output de las funciones
@@ -681,6 +875,9 @@ def evalFilesToAnalyze(files):
     
     # Retornamos la lista de índices de ficheros a analizar eliminando posibles duplicados
     return list(set(singleFiles))
+
+
+
 
 """
     Nombre: Main Menu Exit
@@ -754,11 +951,39 @@ MAIN_MENU_OPTIONS = [
         "function": networkAnalysis
     },
     {
-        "name": "15.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "15.- [ANÁLISIS] Análisis de rutas en el PATH",
+        "function": pathRutesAnalysis
+    },
+    {
+        "name": "16.- [ANÁLISIS] Análisis del fichero /etc/passwd",
+        "function": etcPasswdAnalysis
+    },
+    {
+        "name": "17.- [ANÁLISIS] Análisis de permisos del fichero /etc/passwd",
+        "function": etcPasswdPermissionAnalysis
+    },
+    {
+        "name": "18.- [ANÁLISIS] Análisis de los usuarios loggedados en el sistema",
+        "function": historyLoggedAnalysis
+    },
+    {
+        "name": "19.- [ANÁLISIS] Análisis de las tareas programadas",
+        "function": crontabAnalysis
+    },
+        {
+        "name": "20.- [ANÁLISIS] Análisis de los ficheros ejecutados al inicio",
+        "function": systemInitAnalysis
+    },
+    {
+        "name": "21.- [ANÁLISIS] Análisis del fichero auth log",
+        "function": authLogAnalysis
+    },
+    {
+        "name": "22.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "16.- Salir",
+        "name": "23.- Salir",
         "function": mainMenuExit
     }
 ]
