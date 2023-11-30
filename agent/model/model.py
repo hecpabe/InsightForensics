@@ -12,6 +12,8 @@
 import re, stat, pwd, grp
 from colorama import Fore
 from functools import reduce
+from  datetime import datetime
+from collections import defaultdict
 
 # Controller
 from controller.controller import controllerFindRecentModifiedFiles, controllerFindExecutableFiles, \
@@ -19,7 +21,8 @@ from controller.controller import controllerFindRecentModifiedFiles, controllerF
     controllerEditableRootFilesSearch, controllerGetCapabilities, controllerGetUserGroups, controllerGetEnvironmentVariables, \
     controllerGetFileStats, controllerFullListPath, controllerGetSUIDBinaries, controllerGetSGIDBinaries, controllerGetDate, \
     controllerGetUpTime, controllerGetLsbRelease, controllerGetUname, controllerGetCPUInfo, controllerGetHostname, \
-    controllerGetNetworkInterfaces, controllerGetNetworkConnections
+    controllerGetNetworkInterfaces, controllerGetNetworkConnections, controllerGetPath, controllerGetFileAcces, \
+    controllerHistoryLogged, controllerCrontab, controllerSystemCtl,controllerInitd,controllerAuthLog
 
 # ========== DECLARACIONES GLOBALES ==========
 RECENT_FILES_TIME = 20
@@ -1362,3 +1365,735 @@ def filterNetworkConnections(networkConnections):
     )
 
     return filteredNetworkConnections
+
+
+
+"""
+    Nombre: model | ETC passwd
+    Descripción: Funcion con la que filtraremos los datos del etc/passwd
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad lineas en el fichero
+    Complejidad Espacial: O(n) n -> Cantidad lineas en el fichero
+"""
+def modelEtcPasswd():
+
+    ##PARA EL MODELO
+    etcPasswdOutPut=readFileContent("/etc/passwd")
+
+    finalInformation = [{
+                "info": "----- RIESGOS EN EL ETC/PASSWD ----- ",
+                "infoTypeID": 3
+            }]
+
+    #Info
+    dangerList=[]
+    
+    adminUsers=[{
+                "info": "----- CUENTAS DE ADMINISTRADORES ----- ",
+                "infoTypeID": 0
+            }]
+    serviceUsers = [{
+                "info": "----- CUENTAS DE SERVICIO ----- ",
+                "infoTypeID": 0
+            }]
+    normalUsers = [{
+                "info": "----- CUENTAS DE USUARIO ----- ",
+                "infoTypeID": 0
+            }]
+    
+    usersWithShell = [{
+                "info": "----- CUENTAS CON TERMINAL ----- ",
+                "infoTypeID": 0
+            }]
+
+
+    for line in etcPasswdOutPut.split("\n"):
+
+
+        if not line:
+            continue
+
+        try:
+            user, passwd, uid, gid, fullName, home, shell = line.split(":")
+
+        except:
+            continue
+
+
+        if(passwd!="x" ):
+            dangerList.append({
+                "info": f"[PELIGRO] Usuario {user}, con credenciales {passwd}",
+                "infoTypeID": 3
+            })
+        if(int(uid)==0 and user !="root"):
+            dangerList.append({
+                "info": f"[PELIGRO] Usuario {user}, con UID {uid}",
+                "infoTypeID": 3
+            })
+        if(int(gid)==0 and user !="root"):
+            dangerList.append({
+                "info": f"[PELIGRO] Usuario {user}, con GID {uid}",
+                "infoTypeID": 3
+            })
+
+
+        if(int(uid)==0):
+            adminUsers.append({
+                "info": f"[INFO] Servicio {user}, UID {uid}",
+                "infoTypeID": 0
+            })
+        elif(int(uid)>0 and int(uid)<1000):
+            serviceUsers.append({
+                "info": f"[INFO] Servicio {user}, UID {uid}",
+                "infoTypeID": 0
+            })
+        elif(int(uid)>=1000):
+            normalUsers.append({
+                "info": f"[INFO] Usuario {user}, UID {uid}",
+                "infoTypeID": 0
+            })
+
+        if("sh" in shell):
+            usersWithShell.append({
+                "info": f"[INFO] Usuario {user}, UID {uid}, con Shell {shell}",
+                "infoTypeID": 0
+            })
+
+    finalInformation = finalInformation + dangerList + adminUsers + serviceUsers + normalUsers + usersWithShell
+
+    return finalInformation
+
+        
+"""
+    Nombre: model | ETC passwd permission check
+    Descripción: Funcion con la que comprobaremos permisos del etcpass
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad lineas en el fichero
+    Complejidad Espacial: O(n) n -> Cantidad lineas en el fichero
+"""
+def modelEtcFilePermissionsCheck():
+
+    # Variables necesarias
+    fileListed = ""
+    fileStats = ""
+    fileMode = ""
+    fileOwner = ""
+    fileGroup = ""
+
+    fileUserInDanger = False
+    fileGroupInDanger = False
+
+    finalInformation = []
+
+    # Obtenemos las stats del fichero
+    fileListed = controllerFullListPath("/etc/passwd")
+    fileStats = controllerGetFileStats("/etc/passwd")
+    fileMode = fileStats.st_mode
+
+    finalInformation.append({
+        "info": f"{fileListed['value']}\n",
+        "infoTypeID": 0
+    })
+
+    # Comprobamos el propietario y el grupo del fichero
+    fileOwner = pwd.getpwuid(fileStats.st_uid)[0]
+    fileGroup = grp.getgrgid(fileStats.st_gid)[0]
+
+    if fileOwner not in ["root"]:
+        fileUserInDanger = True
+        finalInformation.append({
+            "info": f"[!] Propietario del fichero: {fileOwner}",
+            "infoTypeID": 3
+        })
+    else:
+        finalInformation.append({
+            "info": f"[+] Propietario del fichero: {fileOwner}",
+            "infoTypeID": 1
+        })
+
+    if fileGroup not in ["root"]:
+        fileGroupInDanger = True
+        finalInformation.append({
+            "info": f"[!] Fichero en el grupo: {fileGroup}",
+            "infoTypeID": 3
+        })
+    else:
+        finalInformation.append({
+            "info": f"[+] Fichero en el grupo: {fileGroup}",
+            "infoTypeID": 1
+        })
+
+    # Comprobamos que los permisos del fichero correspondan con -rw- r-- r--
+    # USER
+    # Si el usuario puede leer o escribir en el fichero pero no debería - Peligro
+    if fileUserInDanger and ((fileMode & stat.S_IRUSR) or (fileMode & stat.S_IWUSR)):
+        finalInformation.append({
+            "info": f"[!] El usuario {fileOwner} puede leer o escribir en el fichero",
+            "infoTypeID": 3
+        })
+    # Si el usuario no puede leer y escribir debiendo poder hacerlo - Aviso
+    elif not fileUserInDanger and not ((fileMode & stat.S_IRUSR) and (fileMode & stat.S_IWUSR)):
+        finalInformation.append({
+            "info": f"[-] El usuario {fileOwner} no puede leer y escribir en el fichero",
+            "infoTypeID": 2
+        })
+    # Si el usuario puede leer y escribir en el fichero y debería hacerlo - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El usuario {fileOwner} puede leer y escribir en el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si el usuario puede ejecutar el fichero - Aviso
+    if fileMode & stat.S_IXUSR:
+        finalInformation.append({
+            "info": f"[-] El usuario {fileOwner} puede ejecutar el fichero",
+            "infoTypeID": 2
+        })
+    else:
+        finalInformation.append({
+            "info": f"[+] El usuario {fileOwner} no puede ejecutar el fichero",
+            "infoTypeID": 1
+        })
+    
+    # GROUP
+    # Si el grupo puede leer el fichero pero no debería - Peligro
+    if fileGroupInDanger and (fileMode & stat.S_IRGRP):
+        finalInformation.append({
+            "info": f"[!] El grupo {fileGroup} puede leer el fichero",
+            "infoTypeID": 3
+        })
+    # Si el grupo no puede leer el fichero pero debería - Aviso
+    elif not fileGroupInDanger and not (fileMode & stat.S_IRGRP):
+        finalInformation.append({
+            "info": f"[-] El grupo {fileGroup} no puede leer el fichero",
+            "infoTypeID": 2
+        })
+    # Si el grupo puede leer el fichero y debería - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El grupo {fileGroup} puede leer el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si el grupo puede escribir el fichero y es un grupo peligroso - Peligro
+    if fileGroupInDanger and (fileMode & stat.S_IWGRP):
+        finalInformation.append({
+            "info": f"[!] El grupo {fileGroup} puede escribir en el fichero",
+            "infoTypeID": 3
+        })
+    # Si el grupo puede escribir en el fichero pero no es un grupo peligroso - Aviso
+    elif not fileGroupInDanger and (fileMode & stat.S_IWGRP):
+        finalInformation.append({
+            "info": f"[-] El grupo {fileGroup} puede escribir en el fichero",
+            "infoTypeID": 2
+        })
+    # Si el grupo no puede escribir en el fichero - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El grupo {fileGroup} no puede escribir en el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si el grupo puede ejecutar el fichero - Aviso
+    if fileMode & stat.S_IXGRP:
+        finalInformation.append({
+            "info": f"[-] El grupo {fileGroup} puede ejecutar el fichero",
+            "infoTypeID": 2
+        })
+    # Si el grupo no puede ejecutar el fichero - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El grupo {fileGroup} no puede ejecutar el fichero",
+            "infoTypeID": 1
+        })
+    
+    # OTHER
+    # Si cualquiera puede escribir el fichero - Peligro
+    if (fileMode & stat.S_IWOTH):
+        finalInformation.append({
+            "info": f"[!] Cualquier usuario puede escribir en el fichero",
+            "infoTypeID": 3
+        })
+    # Si cualquier usuario no escribir el fichero - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] No cualquier usuario puede escribir en el fichero",
+            "infoTypeID": 1
+        })
+    
+    # Si cualquier usuario puede ejecutar el fichero - Aviso
+    if fileMode & stat.S_IXOTH:
+        finalInformation.append({
+            "info": f"[-] El fichero es ejecutable por cualquiera",
+            "infoTypeID": 2
+        })
+    # Si el fichero no es ejecutable por cualquiera - Sin peligro
+    else:
+        finalInformation.append({
+            "info": f"[+] El fichero no es ejecutable por cualquiera",
+            "infoTypeID": 1
+        })
+    
+    return finalInformation
+        
+
+
+
+"""
+    Nombre: model | check path
+    Descripción: funcion para comprobar la seguridad del path
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad rutas en el path
+    Complejidad Espacial: O(n) n -> Cantidad rutas en el path
+"""
+def modelCheckPath():
+
+    finalInformation=[]
+    
+    pathOutPut = controllerGetPath()
+
+
+    if(pathOutPut["error"]==True):
+        finalInformation.append({
+                    "info": f"[ERROR] No se ha podido ejecutar el path",
+                    "infoTypeID": 4
+        })
+        return finalInformation
+    # Dividir el path en una lista de directorios
+    directories = pathOutPut["value"].split(":")
+    
+    # Encontrar el índice del último "bin" en la lista
+    last_bin_index = max((i for i, d in enumerate(directories) if d.endswith("bin")), default=None)
+
+    # Guardar las rutas inválidas antes del último "bin"
+    invalid_paths_before_last_bin = [d for i, d in enumerate(directories[:last_bin_index]) if not d.endswith("bin")]
+    invalid_paths_after_last_bin = [d for i, d in enumerate(directories[last_bin_index + 1:]) if not d.endswith("bin")]
+    
+    for rute in invalid_paths_after_last_bin:
+        if controllerGetFileAcces(rute):
+                finalInformation.append({
+                    "info": f"[AVISO] Se puede escribir en la ruta: {rute}",
+                    "infoTypeID": 2
+                })
+
+
+    if len(finalInformation)==0:
+        finalInformation.append({
+                "info": "No se han encontrado rutas maliciosas en el path",
+                "infoTypeID": 0
+        })
+
+
+    for rute in directories:
+        if rute not in invalid_paths_after_last_bin:
+            if controllerGetFileAcces(rute):
+                    finalInformation.append({
+                        "info": f"[PELIGRO] Se puede escribir en la ruta: {rute}",
+                        "infoTypeID": 3
+                    })
+
+    
+    return finalInformation
+
+
+
+"""
+    Nombre: model | check history logged
+    Descripción: Funcion para comprobar los inicios de sesion
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad rutas en el path
+    Complejidad Espacial: O(n) n -> Cantidad rutas en el path
+"""
+def modelCheckHistoryLogged(days_since=7):
+
+    finalInformation=[]
+    
+
+    ##PARA EL MODELO
+    etcPasswdOutPut=readFileContent("/etc/passwd")
+    serviceUsers=[]
+
+    #Obtenemos las cuentas de servicio
+    for line in etcPasswdOutPut.split("\n"):
+
+        if not line:
+            continue
+
+        try:
+            user, passwd, uid, gid, fullName, home, shell = line.split(":")
+
+        except:
+            continue
+
+
+        if(int(uid)>0 and int(uid)<1000):
+            serviceUsers.append(user)
+
+        
+
+    historyLoggedOutPut = controllerHistoryLogged(days_since)
+    
+    if(historyLoggedOutPut["error"]==True):
+        finalInformation.append({
+                        "info": f"[ERROR] Error ejecutando el historial de loggeos",
+                        "infoTypeID": 4
+        })
+    else:
+
+        dictTimeLogged= historyLoggedOutPut["value"][0]
+        listLoggedUsers=historyLoggedOutPut["value"][1]
+
+        finalInformation.append({
+                "info": f"----- USUARIOS LOGEADOS -----",
+                "infoTypeID": 0
+            })
+        for user in listLoggedUsers:
+            if user in serviceUsers:
+                finalInformation.append({
+                    "info": f"[PELIGRO] Usuario {user} is logged cuenta de servicio",
+                    "infoTypeID": 3
+                })
+            else:
+                finalInformation.append({
+                    "info": f"[INFO] Usuario {user} is logged",
+                    "infoTypeID": 0
+                })
+
+        finalInformation.append({
+                "info": f"----- Tiempos y veces logeados en los ultimos {days_since} dias-----",
+                "infoTypeID": 0
+            })
+        for user , data in dictTimeLogged.items():
+            if user in serviceUsers:
+                finalInformation.append({
+                    "info": f"[PELIGRO] Usuario {user} se loggeo un total de {data[0]} veces durante un total de  {data[1]} minutos cuenta de servcio",
+                    "infoTypeID": 3
+                })
+            else:
+                finalInformation.append({
+                    "info": f"[INFO] Usuario {user} se loggeo un total de {data[0]} veces durante un total de  {data[1]} minutos",
+                    "infoTypeID": 0
+                })
+
+
+    return finalInformation
+
+
+
+"""
+    Nombre: model | check etc crontab
+    Descripción: Funcion para comprobar los inicios de sesion
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad rutas en el path
+    Complejidad Espacial: O(n) n -> Cantidad rutas en el path
+"""
+def modelCheckCrontab():
+
+
+    finalInformation=[]
+    contrabInformation=[]
+    etcCrontabInformation=[]
+    etcPeriodicCrontab=[]
+
+
+    crontrab_eResult, etcCrontabResult, periodicCrontabResult = controllerCrontab()
+
+    contrabInformation.append({
+                    "info": f"----- CRONTAB_E -----",
+                    "infoTypeID": 0
+    })
+
+    if(crontrab_eResult["value"]==True):
+        contrabInformation.append({
+                    "info": f"[ERROR] Error intentaod ejeutar el comando para ver los usuario con tareas programadas",
+                    "infoTypeID": 4
+        })
+    else:
+
+        crontab_e = crontrab_eResult["value"]  
+
+        if "There are no users"  in crontab_e:
+            contrabInformation.append({
+                        "info": f"[INFO] No hay usuarios con tareas programadas en /var/spool/cron/crontabs",
+                        "infoTypeID": 0
+            })
+        else:
+            for user in crontab_e:
+                for tarea in crontab_e[user]:
+                    contrabInformation.append({
+                                "info": f"[INFO] Tarea programada para el usurio {user} ejecutando : {tarea}",
+                                "infoTypeID": 0
+                    })
+
+    etcCrontabInformation.append({
+                    "info": f"\n----- ETC CRONTAB -----",
+                    "infoTypeID": 0
+    })
+
+    if(etcCrontabResult["value"]==True):
+        etcCrontabInformation.append({
+                    "info": f"[ERROR] Error intentaod ejeutar comando para ver ETC CRONTAB",
+                    "infoTypeID": 4
+        })
+    else:
+
+        etcCrontab = etcCrontabResult["value"]  
+
+
+        etcCrontabInformation.append({
+                    "info": f"Archivo ETC CRONTAB",
+                    "infoTypeID": 0
+        })
+
+        for line in etcCrontab["etcCrontab"]:
+            etcCrontabInformation.append({
+                    "info": f"{line}",
+                    "infoTypeID": 0
+         })
+
+    etcPeriodicCrontab.append({
+                    "info": f"\n----- PERIODIC CRONTABS -----",
+                    "infoTypeID": 0
+    })
+
+
+    
+    if(periodicCrontabResult["value"]==True):
+        etcPeriodicCrontab.append({
+                    "info": f"[ERROR] Error intentaod ver archivos periodicos de crontab",
+                    "infoTypeID": 4
+        })
+    else:
+
+        etcCrontab = periodicCrontabResult["value"]  
+
+        for periodic in etcCrontab:
+            files=[]
+            for file in etcCrontab[periodic]:
+                files.append(file)
+
+            etcPeriodicCrontab.append({
+                    "info": f"Files in CRON.{periodic}: {files}",
+                    "infoTypeID": 0
+            }) 
+
+
+    finalInformation = contrabInformation + etcCrontabInformation + etcPeriodicCrontab
+    return finalInformation
+    
+
+
+
+"""
+    Nombre: model | check init proccess
+    Descripción: Funcion para comprobar los archivos que se ejecutan al inicio
+    Parámetros: Ninguno
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad rutas en el path
+    Complejidad Espacial: O(n) n -> Cantidad rutas en el path
+"""
+def modelCheckInitProccess():
+
+
+    finalInformation=[]
+    systemctl=controllerSystemCtl()
+
+
+    finalInformation.append({
+        "info": f"----- SYSTEM CTL -----",
+        "infoTypeID": 0
+    })
+
+
+    if(systemctl["error"]==False):
+        
+
+        systemctl=systemctl["value"].strip().split("\n")
+        systemctl=list(filter(lambda x: "unit files listed" not in x , systemctl))
+        systemctl=systemctl[:-1]
+        systemctl=systemctl[1:]
+
+        systemctl = list(
+            map(
+                lambda x: re.sub(' +', ' ', x), 
+                systemctl
+            )
+        )
+        finalInformation.append({
+            "info": f"{'Unit File':<30} {'State':<10} {'Preset'}\n",
+            "infoTypeID": 0
+        })
+        for line in systemctl:
+
+            if not line:
+                continue
+
+
+            unitFile, state, preset = line.split()
+
+
+            finalInformation.append({
+                "info": f"{unitFile:<30} {state:<10} {preset}",
+                "infoTypeID": 0
+            })
+
+    else:
+        finalInformation.append({
+                "info": "[ERROR] No se ha podido ejecutar systemctl",
+                "infoTypeID": 4
+        })
+
+
+    finalInformation.append({
+        "info": f"\n----- INIT D -----",
+        "infoTypeID": 0
+    })
+
+
+    initd=controllerInitd()
+
+    files=""
+    if(initd["error"]==False):
+
+        initd=initd["value"].split("\n")
+        print(initd)
+        for line in initd:
+            print()
+            if not line:
+                continue
+            
+            files=files+line+", "
+
+        finalInformation.append({
+                "info": f"Archivos ejecutados al inicio: {files}",
+                "infoTypeID": 0
+        })
+
+    else:
+        finalInformation.append({
+                "info": "[ERROR] No se ha podido ejecutar ls initd",
+                "infoTypeID": 4
+        })
+    return finalInformation
+
+
+"""
+    Nombre: model | check authLog
+    Descripción: Funcion para comprobar el archivo auth.log
+    Parámetros: 
+        [string] rute Ruta del archivo por defecto /var/log/auth.log
+        [int] dias_check int dias desde lo cuales se realizaran pruebas
+    Retorno: [DICT] Diccionario con el formato {"info": String, "infoTypeID": ID del tipo de escaneo}
+    Precondición: Ninguna
+    Complejidad Temporal: O(n) n -> Cantidad rutas en el path
+    Complejidad Espacial: O(n) n -> Cantidad rutas en el path
+"""
+def modelCheckAuthLog(rute="/var/log/auth.log", dias_check=30, max_tries=100):
+
+    authLog=controllerAuthLog(rute)
+
+    fecha_actual = datetime.now()
+    change_passwd=[]
+    users_sudo=[]
+    ipInfo=[]
+    tries_filed_ip = defaultdict(int)
+
+    change_passwd.append({
+        "info": "\n----- CAMBIOS DE CONTRASEÑAS -----",
+        "infoTypeID": 0
+    })
+
+    ipInfo.append({
+        "info": "\n----- USOS DE SUDO -----",
+        "infoTypeID": 0
+    })
+
+    users_sudo.append({
+        "info": "\n----- Inicios Fallidos -----",
+        "infoTypeID": 0
+    })
+
+
+    if(authLog["error"]==False):
+        authLog=authLog["value"].split("\n")
+        for line in authLog:
+            if not line:
+                continue
+
+            if 'passwd' in line and 'password changed' in line:
+                match=re.search(r'for\s+([^:\s]+)', line)
+
+                if match:
+                    user = match.group(1)
+
+                    fecha_cambio_match = re.search(r'(\w{3} \d+ \d+:\d+:\d+)', line) 
+                    if fecha_cambio_match:
+                        fecha_cambio_str = f"{fecha_cambio_match.group(1)} {fecha_actual.year}"
+                        fecha_cambio = datetime.strptime(fecha_cambio_str, '%b %d %H:%M:%S %Y')
+
+                        diferencia = fecha_actual - fecha_cambio
+                        if 0 <= diferencia.days <= dias_check:
+                            fecha_cambio_str_formato = fecha_cambio.strftime('%Y-%m-%d %H:%M:%S')
+                            change_passwd.append({
+                                "info": f"[AVISO] El usuario {user} ha cambiado la contrasela el: {fecha_cambio_str_formato}",
+                                "infoTypeID": 2
+                            })
+
+            if 'sudo' in line and 'COMMAND' in line:
+                match = re.search(r'sudo: (.+) :', line)
+                if match:
+                    user = match.group(1)
+                    fecha_cambio_match = re.search(r'(\w{3} \d+ \d+:\d+:\d+)', line) 
+                    if fecha_cambio_match:
+                        fecha_cambio_str = f"{fecha_cambio_match.group(1)} {fecha_actual.year}"
+                        fecha_cambio = datetime.strptime(fecha_cambio_str, '%b %d %H:%M:%S %Y')
+
+                        diferencia = fecha_actual - fecha_cambio
+                        if 0 <= diferencia.days <= dias_check:
+                            fecha_cambio_str_formato = fecha_cambio.strftime('%Y-%m-%d %H:%M:%S')
+                            users_sudo.append({
+                                "info": f"[AVISO] El usuario {user} ha usado SUDO a las {fecha_cambio_str_formato}" ,
+                                "infoTypeID": 2
+                            })
+
+
+            if 'ssh' in line and 'Failed' in line:
+                match = re.search(r'from (\d+\.\d+\.\d+\.\d+)', line)
+                if match:
+                    ip = match.group(1)
+                    fecha_cambio_match = re.search(r'(\w{3} \d+ \d+:\d+:\d+)', line) 
+                    if fecha_cambio_match:
+                        fecha_cambio_str = f"{fecha_cambio_match.group(1)} {fecha_actual.year}"
+                        fecha_cambio = datetime.strptime(fecha_cambio_str, '%b %d %H:%M:%S %Y')
+
+                        diferencia = fecha_actual - fecha_cambio
+                        if 0 <= diferencia.days <= dias_check:
+                            fecha_cambio_str_formato = fecha_cambio.strftime('%Y-%m-%d %H:%M:%S')
+                            tries_filed_ip[ip] += 1
+       
+
+        ip_failed = {ip: tries for ip, tries in tries_filed_ip.items() if tries > max_tries}
+
+
+        for ip_fail in ip_failed:
+            users_sudo.append({
+                        "info": f"[PELIGRO] La IP {ip_fail} tiene {ip_failed[ip_fail]} intentos fallidos",
+                        "infoTypeID": 3
+            })
+
+
+        finalInformation = change_passwd + users_sudo + ipInfo
+
+        return finalInformation 
