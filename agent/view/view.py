@@ -765,10 +765,10 @@ def historyLoggedAnalysis(showInfo=True):
     if showInfo:
         printScanInfo()
     
-    
+    days_since = int(input("Introduzca los dias desde los que comprobar: "))
     # Obtenemos la información del PATH
     printSpacer("LOGGED USERS")
-    analyzedHistoryResult = modelCheckHistoryLogged()
+    analyzedHistoryResult = modelCheckHistoryLogged(days_since=days_since)
     printObtainedInfo(analyzedHistoryResult)
 
 
@@ -816,8 +816,8 @@ def authLogAnalysis(showInfo=True):
         printScanInfo()
     
     try:
-        rute = int(input("Introduzca la ruta del auth.log: "))
-        max_tries = int(input("Introduzca la ruta del auth.log: "))
+        rute = input("Introduzca la ruta del auth.log: ")
+        max_tries = int(input("Introduzca el numero de intentos a partir del cual sera interpretara como malicioso: "))
         dias_check =  int(input("Introduzca los dias desde los que comprobar: "))
         # Obtenemos la información del PATH
         printSpacer("ANALISIS DEL AUTH.LOG")
