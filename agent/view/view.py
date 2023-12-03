@@ -5,7 +5,7 @@
     Nombre: Héctor Paredes Benavides y Sergio Bermúdez Fernández
     Descripción: Vista del agente de InsightForensics
     Fecha: 16/10/2023
-    Última Modificación: 29/10/2023
+    Última Modificación: 09/11/2023
 """
 
 # ========== IMPORTADO DE BIBLIOTECAS ==========
@@ -13,7 +13,10 @@ from colorama import Fore
 import os
 
 from model.model import modelSearchRecentlyModifiedFiles, modelSearchSuspectFiles, modelAnalyzeSuspiciousFiles, \
-    modelSystemPathAnalysis, modelEditableRootFilesSearch
+    modelSystemPathAnalysis, modelEditableRootFilesSearch, modelEtcHostsCheck, modelCapabilitiesCheck, modelGroupsCheck, \
+    modelSSHKeySearch, modelEnvironmentVariablesCheck, modelSudoersFileCheck, modelShadowFilePermissionsCheck, \
+    modelBitSUIDCheck, modelBitSGIDCheck, modelSystemInfoCheck, modelNetworkInterfacesCheck, modelNetworkConnectionsCheck, \
+    modelCheckPath, modelEtcPasswd, modelEtcFilePermissionsCheck, modelCheckHistoryLogged, modelCheckCrontab, modelCheckInitProccess, modelCheckAuthLog
 
 # ========== FUNCIÓN PRINCIPAL MAIN ==========
 """
@@ -113,9 +116,9 @@ def printSpacer(textInSpacer):
     Complejidad Espacial: O(1)
 """
 def printError(errorString, exception=None, exitNeeded=False):
-    print(Fore.RED + "[X] ERROR: " + errorString + Fore.RESET)
+    print(Fore.MAGENTA + "[X] ERROR: " + errorString + Fore.RESET)
     if exception:
-        print(Fore.RED + "Exception: " + str(exception) + Fore.RESET)
+        print(Fore.MAGENTA + "Exception: " + str(exception) + Fore.RESET)
     if exitNeeded:
         exit(1)
 
@@ -174,9 +177,24 @@ def fullScan():
     printScanInfo()
 
     # Escaneamos el sistema
+    systemInfoCheck(False)
     fileSystemAnalysis(False)
     systemPathAnalysis(False)
     editableRootFilesSearch(False)
+    etcHostsCheck(False)
+    capabilitiesCheck(False)
+    groupsCheck(False)
+    sshKeySearch(False)
+    environmentVariablesCheck(False)
+    sudoersFileCheck(False)
+    shadowFilePermissionsCheck(False)
+    bitsSUIDSGIDCheck(False)
+    networkAnalysis(False)
+    pathRutesAnalysis(False)
+    etcPasswdAnalysis(False)
+    historyLoggedAnalysis(False)
+    crontabAnalysis(False)
+    authLogAnalysis(False)
 
     return True
 
@@ -196,13 +214,19 @@ def fileSystemAnalysis(showInfo=True):
     recentlyModifiedFiles = []
     suspectFiles = []
 
+    try:
+        recentlyModifiedFileTime = int(input("Introduzca la cantidad de minutos desde que se ha modificado un archivo para considerarlo reciente: "))
+    except:
+        printError("No se ha podido interpretar el tiempo introducido, estableciendo el por defecto...")
+        recentlyModifiedFileTime = -1
+
     # Mostramos la leyenda del escaneo
     if showInfo:
         printScanInfo()
 
     # Realizamos el escaneo de ficheros modificados recientemente
     printSpacer("Ficheros modificados recientemente")
-    recentlyModifiedFiles = modelSearchRecentlyModifiedFiles()
+    recentlyModifiedFiles = modelSearchRecentlyModifiedFiles(recentlyModifiedFileTime) if recentlyModifiedFileTime > 0 else modelSearchRecentlyModifiedFiles()
     printObtainedInfo(recentlyModifiedFiles)
 
     # Realizamos el escaneo de ficheros sospechosos
@@ -276,15 +300,294 @@ def editableRootFilesSearch(showInfo=True):
     return True
 
 """
+    Nombre: Etc hosts check
+    Descripción: Función con la que obtenemos y mostramos los hosts de un sistema
+    Parámetros:
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de hosts
+"""
+def etcHostsCheck(showInfo=True):
+
+    # Variables necesarias
+    hosts = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+
+    # Realizamos el escaneo del fichero /etc/hosts
+    printSpacer("Hosts del sistema")
+    hosts = modelEtcHostsCheck()
+    printObtainedInfo(hosts)
+    
+    return True
+
+"""
+    Nombre: Capabilities check
+    Descripción: Función con la que obtenemos las capabilities en función de si son peligrosas o no y las mostramos por pantalla
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de programas con capabilities
+"""
+def capabilitiesCheck(showInfo=True):
+    
+    # Variables necesarias
+    capabilities = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos la comprobación de las capabilities
+    printSpacer("Capabilities")
+    capabilities = modelCapabilitiesCheck()
+    printObtainedInfo(capabilities)
+
+    return True
+
+"""
+    Nombre: Groups check
+    Descripción: Función con la que comprobamos los grupos del sistema y mostramos la información
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de grupos en el fichero /etc/group
+"""
+def groupsCheck(showInfo=True):
+    
+    # Variables necesarias
+    groups = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos la comprobación de los grupos
+    printSpacer("Grupos del sistema")
+    groups = modelGroupsCheck()
+    printObtainedInfo(groups)
+
+    return True
+
+"""
+    Nombre: SSH key search
+    Descripción: Función con la que buscamos claves SSH (.pem y .ppk) en el sistema y las mostramos
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de claves encontradas
+"""
+def sshKeySearch(showInfo=True):
+
+    # Variables necesarias
+    sshKeys = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Realizamos la búsqueda de claves SSH
+    printSpacer("Claves SSH")
+    sshKeys = modelSSHKeySearch("/")
+    printObtainedInfo(sshKeys)
+
+    return True
+
+"""
+    Nombre: Environment variables check
+    Descripción: Función con la que comprobamos las variables de entorno del sistema y las mostramos
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de variables de entorno
+"""
+def environmentVariablesCheck(showInfo=True):
+
+    # Variables necesarias
+    environmentVariables = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+
+    # Realizamos la comprobación de variables de entorno
+    printSpacer("Variables de entorno")
+    environmentVariables = modelEnvironmentVariablesCheck()
+    printObtainedInfo(environmentVariables)
+
+    return True
+
+"""
+    Nombre: Sudoers file check
+    Descripción: Función con la que comprobamos el contenido del fichero /etc/sudoers y lo mostramos por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El programa tiene que ejecutarse con permisos de lectura del fichero /etc/sudoers
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de reglas del fichero /etc/sudoers
+"""
+def sudoersFileCheck(showInfo=True):
+
+    # Variables necesarias
+    sudoersFileContent = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos el fichero de sudoers
+    printSpacer("Fichero /etc/sudoers")
+    try:
+        sudoersFileContent = modelSudoersFileCheck()
+        printObtainedInfo(sudoersFileContent)
+    except Exception as e:
+        printError("No se ha podido comprobar el fichero /etc/sudoers", e)
+
+    return True
+
+"""
+    Nombre: Shadow file permissions check
+    Descripción: Función con la que comprobamos los permisos del fichero /etc/shadow y mostramos el resultado por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El programa tiene que ejecutarse con permisos para poder listar el fichero /etc/shadow
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def shadowFilePermissionsCheck(showInfo=True):
+    
+    # Variables necesarias
+    shadowFilePermissions = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos los permisos del fichero /etc/shadow
+    printSpacer("Permisos del fichero /etc/shadow")
+    shadowFilePermissions = modelShadowFilePermissionsCheck()
+    printObtainedInfo(shadowFilePermissions)
+
+    return True
+
+"""
+    Nombre: Bit SUID check
+    Descripción: Función con la que obtenemos los binarios con el bit SUID/SGID activado, analizamos si son una posible amenaza
+                    y mostramos los resultados por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros con el bit SUID/SGID activado
+"""
+def bitsSUIDSGIDCheck(showInfo=True):
+
+    # Variables necesarias
+    bitsSUID = []
+    bitsSGID = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos los binarios con SUID y SGID
+    printSpacer("Binarios con SUID activado")
+    bitsSUID = modelBitSUIDCheck()
+    printObtainedInfo(bitsSUID)
+
+    printSpacer("Binarios con SGID activado")
+    bitsSGID = modelBitSGIDCheck()
+    printObtainedInfo(bitsSGID)
+
+    return True
+
+"""
+    Nombre: System info check
+    Descripción: Función con la que obtenemos información del sistema y la mostramos por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(1)
+"""
+def systemInfoCheck(showInfo=True):
+
+    # Variables necesarias
+    systemInfo = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Comprobamos la información del sistema y la mostramos por la terminal
+    printSpacer("Información del sistema")
+    systemInfo = modelSystemInfoCheck()
+    printObtainedInfo(systemInfo)
+
+    return True
+
+"""
+    Nombre: Network analysis
+    Descripción: Función con la que comprobamos las interfaces y las conexiones de red, y las mostramos por la terminal
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: Ninguna
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de interfaces y conexiones de red
+"""
+def networkAnalysis(showInfo=True):
+
+    # Variables necesarias
+    networkInterfaces = []
+    networkConnections = []
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    # Obtenemos la información de las interfaces de red
+    printSpacer("Interfaces de red")
+    networkInterfaces = modelNetworkInterfacesCheck()
+    printObtainedInfo(networkInterfaces)
+
+    # Obtenemos la información de las conexiones de red
+    printSpacer("Conexiones de red")
+    networkConnections = modelNetworkConnectionsCheck()
+    printObtainedInfo(networkConnections)
+
+    return True
+
+"""
     Nombre: Suspect file analysis
     Descripción: Función con la que analizamos uno o más ficheros mediante la API de VirusTotal
-    Parámetros: Ninguno
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
     Retorno: [BOOL] Si el menu principal continua o no
     Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
     Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
 """
-def suspectFileAnalysis():
-    
+def suspectFileAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
     # Variables necesarias
     infoFiles = []
     warningFiles = []
@@ -341,6 +644,190 @@ def suspectFileAnalysis():
 
     return True
 
+
+
+"""
+    Nombre: systemInitAnalysis
+    Descripción: Función con la que analizamos los ficheros de inicio del equipo
+    Parámetros: 
+        0: [BOOL] Si se muestra la leyenda o no
+    Retorno: [BOOL] Si el menu principal continua o no
+    Complejidad Temporal: O(n) n -> Cantidad de ficheros obtenidos
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros obtenidos
+"""
+def systemInitAnalysis(showInfo=True):
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+
+
+
+    # Obtenemos la información del PATH
+    printSpacer("Ejecuion durante el inicio")
+    systemInitOutPut=modelCheckInitProccess()
+    printObtainedInfo(systemInitOutPut)
+
+
+    return True
+
+
+
+"""
+    Nombre: Path Rutes Analysis
+    Descripción: Funcion con la que mostramos los resultados del analisis de la variable $PATH
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def pathRutesAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("VARIABLE PATH")
+    analyzedPathResult = modelCheckPath()
+    printObtainedInfo(analyzedPathResult)
+
+
+    return True
+
+
+
+"""
+    Nombre: etcPasswdAnalysis
+    Descripción: Funcion para analizar el archivo etc/passwd
+
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def etcPasswdAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("ETC PASSWD")
+    analyzedEtcResult = modelEtcPasswd()
+    printObtainedInfo(analyzedEtcResult)
+
+
+    return True
+
+
+"""
+    Nombre: etcPasswd PermisionAnalysis
+    Descripción: Funcion para analizar los permisos de archivo etc/passwd
+
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def etcPasswdPermissionAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("ETC PASSWD PERMISION")
+    analyzedEtcPermissionResult = modelEtcFilePermissionsCheck()
+    printObtainedInfo(analyzedEtcPermissionResult)
+
+
+    return True
+
+
+"""
+    Nombre: history logged Analysis
+    Descripción: Funcion para mostrar los usuarios, tiempo y veces loggedos en el sistema
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def historyLoggedAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    days_since = int(input("Introduzca los dias desde los que comprobar: "))
+    # Obtenemos la información del PATH
+    printSpacer("LOGGED USERS")
+    analyzedHistoryResult = modelCheckHistoryLogged(days_since=days_since)
+    printObtainedInfo(analyzedHistoryResult)
+
+
+    return True
+
+
+
+"""
+    Nombre: Path Rutes Analysis
+    Descripción: Funcion con la que mostramos los resultados del analisis de la variable $PATH
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def crontabAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    
+    # Obtenemos la información del PATH
+    printSpacer("TAREAS PROGRAMADAS")
+    analyzedCrontabResult = modelCheckCrontab()
+    printObtainedInfo(analyzedCrontabResult)
+
+
+    return True
+
+"""
+    Nombre: Path Rutes Analysis
+    Descripción: Funcion para analizar el contenido del auth.log
+    Parámetros: Ninguno
+    Retorno: [BOOL] Si el menu principal continua o no
+    Precondición: El string debe estar correctamente formateado
+    Complejidad Temporal: O(1)
+    Complejidad Espacial: O(n) n -> Cantidad de ficheros a analizar
+"""
+def authLogAnalysis(showInfo=True):
+
+    # Mostramos la leyenda del escaneo
+    if showInfo:
+        printScanInfo()
+    
+    try:
+        rute = input("Introduzca la ruta del auth.log: ")
+        max_tries = int(input("Introduzca el numero de intentos a partir del cual sera interpretara como malicioso: "))
+        dias_check =  int(input("Introduzca los dias desde los que comprobar: "))
+        # Obtenemos la información del PATH
+        printSpacer("ANALISIS DEL AUTH.LOG")
+        analyzedAuthLogResult = modelCheckAuthLog(rute=rute, dias_check=dias_check, max_tries=max_tries)
+        printObtainedInfo(analyzedAuthLogResult)
+    except Exception as e:
+        printError("Error en el analisis del auth.log", e)
+    return True
+
+
 """
     Nombre: Print obtained info
     Descripción: Función con la que mostramos de forma correcta el output de las funciones
@@ -381,13 +868,16 @@ def evalFilesToAnalyze(files):
     # Sino, preparamos el array de enteros a retornar, en caso de que haya - es un rango
     elif "-" in files:
         rangeStart, rangeEnd = map(lambda x: int(x), files.split("-"))
-        singleFiles = list(range(rangeStart, rangeEnd+1))
+        singleFiles = list(range(rangeStart - 1, rangeEnd))
     # Sino, es un número suelto, por lo que lo añadimos convertido a entero
     else:
         singleFiles.append(int(files))
     
     # Retornamos la lista de índices de ficheros a analizar eliminando posibles duplicados
     return list(set(singleFiles))
+
+
+
 
 """
     Nombre: Main Menu Exit
@@ -405,27 +895,95 @@ def mainMenuExit():
 # ========== DECLARACIONES GLOBALES ==========
 MAIN_MENU_OPTIONS = [
     {
-        "name": "1.- [SCAN] Análisis total",
+        "name": "1.- [SCAN] Obtención de información del sistema",
+        "function": systemInfoCheck
+    },
+    {
+        "name": "2.- [SCAN] Análisis total",
         "function": fullScan
     },
     {
-        "name": "2.- [SCAN] Análisis del sistema de ficheros",
+        "name": "3.- [SCAN] Análisis del sistema de ficheros",
         "function": fileSystemAnalysis
     },
     {
-        "name": "3.- [SCAN] Búsqueda de ficheros .sh en el path",
+        "name": "4.- [SCAN] Búsqueda de ficheros .sh en el path",
         "function": systemPathAnalysis
     },
     {
-        "name": "4.- [SCAN] Búsqueda de ficheros de root editables por cualquiera",
+        "name": "5.- [SCAN] Búsqueda de ficheros de root editables por cualquiera",
         "function": editableRootFilesSearch
     },
     {
-        "name": "5.- [ANÁLISIS] Análisis de ficheros sospechosos",
+        "name": "6.- [SCAN] Hosts del equipo",
+        "function": etcHostsCheck
+    },
+    {
+        "name": "7.- [SCAN] Capabilities del equipo",
+        "function": capabilitiesCheck
+    },
+    {
+        "name": "8.- [SCAN] Grupos del sistema",
+        "function": groupsCheck
+    },
+    {
+        "name": "9.- [SCAN] Claves SSH en el sistema",
+        "function": sshKeySearch
+    },
+    {
+        "name": "10.- [SCAN] Variables de entorno del sistema",
+        "function": environmentVariablesCheck
+    },
+    {
+        "name": "11.- [SCAN] Fichero /etc/sudoers",
+        "function": sudoersFileCheck
+    },
+    {
+        "name": "12.- [SCAN] Permisos del fichero /etc/shadow",
+        "function": shadowFilePermissionsCheck
+    },
+    {
+        "name": "13.- [SCAN] Binarios con SUID/SGID activado",
+        "function": bitsSUIDSGIDCheck
+    },
+    {
+        "name": "14.- [SCAN] Información de red y conexiones",
+        "function": networkAnalysis
+    },
+    {
+        "name": "15.- [ANÁLISIS] Análisis de rutas en el PATH",
+        "function": pathRutesAnalysis
+    },
+    {
+        "name": "16.- [ANÁLISIS] Análisis del fichero /etc/passwd",
+        "function": etcPasswdAnalysis
+    },
+    {
+        "name": "17.- [ANÁLISIS] Análisis de permisos del fichero /etc/passwd",
+        "function": etcPasswdPermissionAnalysis
+    },
+    {
+        "name": "18.- [ANÁLISIS] Análisis de los usuarios loggedados en el sistema",
+        "function": historyLoggedAnalysis
+    },
+    {
+        "name": "19.- [ANÁLISIS] Análisis de las tareas programadas",
+        "function": crontabAnalysis
+    },
+        {
+        "name": "20.- [ANÁLISIS] Análisis de los ficheros ejecutados al inicio",
+        "function": systemInitAnalysis
+    },
+    {
+        "name": "21.- [ANÁLISIS] Análisis del fichero auth log",
+        "function": authLogAnalysis
+    },
+    {
+        "name": "22.- [ANÁLISIS] Análisis de ficheros sospechosos",
         "function": suspectFileAnalysis
     },
     {
-        "name": "6.- Salir",
+        "name": "23.- Salir",
         "function": mainMenuExit
     }
 ]
@@ -458,8 +1016,8 @@ SCAN_INFO_TYPES = [
     {
         "id": 3,
         "type": "ERROR",
-        "color": Fore.RED,
-        "colorString": "Rojo"
+        "color": Fore.MAGENTA,
+        "colorString": "Morado"
     }
 ]
 
